@@ -1,8 +1,9 @@
+#!/usr/bin/env node
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
 
-const offers = JSON.parse(fs.readFileSync(path.join(__dirname, './offers/v1.0/aws/AmazonEC2/current/index.json'), 'utf-8'));
+const offers = JSON.parse(fs.readFileSync(path.join(__dirname, './offers/v1.0/aws/AmazonEC2/current/index.json'), 'utf8'));
 const products = Object.values(offers.products);
 const instanceProducts = products.filter(p => p.productFamily === 'Compute Instance'
   && p.attributes.operation.startsWith('RunInstances') // filter out bad data
@@ -72,6 +73,7 @@ function priceName(p) {
 }
 
 const ec2 = {};
+const ec2pricing = {};
 
 instanceProducts.forEach(p => {
   const { location, instanceType } = p.attributes;
@@ -87,9 +89,15 @@ instanceProducts.forEach(p => {
     delete info.licenseModel;
     delete info.usagetype;
     delete info.operation;
-    ec2[instanceType] = { instanceType, info, prices: [] };
+    ec2[instanceType] = { instanceType, info };
   }
-  ec2[instanceType].prices.push({
+  if (!ec2pricing[location]) {
+    ec2pricing[location] = {};
+  }
+  if (!ec2pricing[location][instanceType]) {
+    ec2pricing[location][instanceType] = [];
+  }
+  ec2pricing[location][instanceType].push({
     Region: location,
     Name: priceName(p),
     Tenancy: p.attributes.tenancy,
@@ -98,7 +106,18 @@ instanceProducts.forEach(p => {
   });
 });
 
-process.stdout.write(JSON.stringify(ec2));
+const regionFiles = new Map([...regions].sort().map((r, i) => [r, `ec2-region-${i}.json`]));
 
-// const out = Object.values(ec2).map(t => ([t.instanceType, t.prices.filter(p => p.Region === 'Canada (Central)' && p.Tenancy === 'Shared')]));
-// console.log(util.inspect(out, true, 6, true));
+function write(file, json) {
+  const content = JSON.stringify(json);
+  console.log('writing', file, content.length, 'bytes');
+  fs.writeFileSync(path.join(__dirname, 'data', file), content, 'utf8');
+}
+
+write('ec2.json', {
+  types: ec2,
+  regions: [...regionFiles],
+});
+Object.keys(ec2pricing).forEach(r => {
+  write(regionFiles.get(r), ec2pricing[r]);
+});
