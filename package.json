@@ -1,0 +1,17 @@
+{
+  "name": "instance-info",
+  "version": "1.0.0",
+  "author": "Neil Gentleman <ngentleman@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "build": "make && parcel build --experimental-scope-hoisting src/index.html",
+    "start": "make && parcel serve --no-autoinstall src/index.html"
+  },
+  "dependencies": {
+    "classnames": "^2.2.6",
+    "nanohtml": "^1.2.4"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.9.7"
+  }
+}

@@ -3,13 +3,31 @@ const fs = require('fs');
 const path = require('path');
 const util = require('util');
 
+const regions = [
+  { id: 'us-gov-west-1', label: 'AWS GovCloud (US)' },
+  { id: 'ap-south-1', label: 'Asia Pacific (Mumbai)' },
+  { id: 'ap-northeast-1', label: 'Asia Pacific (Tokyo)' },
+  { id: 'ap-northeast-3', label: 'Asia Pacific (Osaka-Local)' },
+  { id: 'ap-northeast-2', label: 'Asia Pacific (Seoul)' },
+  { id: 'ap-southeast-1', label: 'Asia Pacific (Singapore)' },
+  { id: 'ap-southeast-2', label: 'Asia Pacific (Sydney)' },
+  { id: 'ca-central-1', label: 'Canada (Central)' },
+  { id: 'eu-central-1', label: 'EU (Frankfurt)' },
+  { id: 'eu-west-1', label: 'EU (Ireland)' },
+  { id: 'eu-west-2', label: 'EU (London)' },
+  { id: 'eu-west-3', label: 'EU (Paris)' },
+  { id: 'sa-east-1', label: 'South America (Sao Paulo)' },
+  { id: 'us-east-1', label: 'US East (N. Virginia)' },
+  { id: 'us-east-2', label: 'US East (Ohio)' },
+  { id: 'us-west-1', label: 'US West (N. California)' },
+  { id: 'us-west-2', label: 'US West (Oregon)' },
+];
+
 const offers = JSON.parse(fs.readFileSync(path.join(__dirname, './offers/v1.0/aws/AmazonEC2/current/index.json'), 'utf8'));
 const products = Object.values(offers.products);
 const instanceProducts = products.filter(p => p.productFamily === 'Compute Instance'
   && p.attributes.operation.startsWith('RunInstances') // filter out bad data
   && p.attributes.tenancy !== 'Host'); // you need to pay for the dedicated host separately, so this isn't helpful
-const instanceTypes = new Set(instanceProducts.map(p => p.attributes.instanceType));
-const regions = new Set(instanceProducts.map(p => p.attributes.location));
 
 function only(o) {
   if (o) {
@@ -69,7 +87,7 @@ function addCost(a, b) {
 }
 
 function priceName(p) {
-  return [p.attributes.operatingSystem, p.attributes.preInstalledSw, p.attributes.licenseModel].filter(n => n !== 'No License required').join(' - '); 
+  return [p.attributes.operatingSystem, p.attributes.preInstalledSw, p.attributes.licenseModel].filter(n => n !== 'No License required' && n !== 'NA').join(' - ');
 }
 
 const ec2 = {};
@@ -98,7 +116,7 @@ instanceProducts.forEach(p => {
     ec2pricing[location][instanceType] = [];
   }
   ec2pricing[location][instanceType].push({
-    Region: location,
+    // Region: location,
     Name: priceName(p),
     Tenancy: p.attributes.tenancy,
     OnDemand: onDemandPrice(p.sku),
@@ -106,7 +124,7 @@ instanceProducts.forEach(p => {
   });
 });
 
-const regionFiles = new Map([...regions].sort().map((r, i) => [r, `ec2-region-${i}.json`]));
+const regionFiles = new Map(regions.map((r) => [r.label, `ec2-${r.id}.json`]));
 
 function write(file, json) {
   const content = JSON.stringify(json);
@@ -114,10 +132,7 @@ function write(file, json) {
   fs.writeFileSync(path.join(__dirname, 'data', file), content, 'utf8');
 }
 
-write('ec2.json', {
-  types: ec2,
-  regions: [...regionFiles],
-});
+write('ec2.json', ec2);
 Object.keys(ec2pricing).forEach(r => {
   write(regionFiles.get(r), ec2pricing[r]);
 });

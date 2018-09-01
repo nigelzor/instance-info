@@ -1,1 +1,5 @@
 /offers
+/data
+/dist
+/.cache
+/node_modules
