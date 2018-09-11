@@ -1,4 +1,5 @@
 import html from 'nanohtml';
+import morph from 'nanomorph';
 import regions from './regions';
 import types from '../data/ec2.json';
 import options from '../data/purchase-options.json';
@@ -206,13 +207,13 @@ function render0(state) {
       if (state.filter.unavailable && !costs[t.instanceType]) {
         return false;
       }
-      if (state.filter.memory != null && t.memory < state.filter.memory) {
+      if (state.filter.memory && t.memory < state.filter.memory) {
         return false;
       }
-      if (state.filter.vcpu != null && t.vcpu < state.filter.vcpu) {
+      if (state.filter.vcpu && t.vcpu < state.filter.vcpu) {
         return false;
       }
-      if (state.filter.storage != null && t.storage < state.filter.storage) {
+      if (state.filter.storage && t.storage < state.filter.storage) {
         return false;
       }
       return true;
@@ -239,9 +240,9 @@ function render0(state) {
     </div>
     <label>Filter:</label>
     <div>
-      <label>Memory: <input type="number" value=${state.filter.memory} onchange=${updateFilterMemory} /></label>
-      <label>vCPUs: <input type="number" value=${state.filter.vcpu} onchange=${updateFilterVcpu} /></label>
-      <label>Storage: <input type="number" value=${state.filter.storage} onchange=${updateFilterStorage} /></label>
+      <label>Memory: <input type="number" value=${state.filter.memory} oninput=${updateFilterMemory} onchange=${updateFilterMemory} /></label>
+      <label>vCPUs: <input type="number" value=${state.filter.vcpu} oninput=${updateFilterVcpu} onchange=${updateFilterVcpu} /></label>
+      <label>Storage: <input type="number" value=${state.filter.storage} oninput=${updateFilterStorage} onchange=${updateFilterStorage} /></label>
       <label>Hide Unavailable: <input type="checkbox" checked=${state.filter.unavailable} onchange=${toggleFilterUnavailable} /></label>
     </div>
   </div>
@@ -262,22 +263,15 @@ function render0(state) {
 }
 
 let batch = 0;
+const root = document.getElementById('root');
 
 function render(state) {
   const current = ++batch;
   Promise.resolve(render0(state)).then((el) => {
     if (current === batch) {
-      replaceRoot(el);
+      morph(root, el)
     }
   });
-}
-
-function replaceRoot(el) {
-  const root = document.getElementById('root');
-  while (root.firstChild) {
-    root.removeChild(root.firstChild);
-  }
-  root.appendChild(el);
 }
 
 render(state);
