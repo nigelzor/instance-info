@@ -31,11 +31,27 @@ tbody tr.highlight:hover {
   margin-bottom: 1em;
 }
 
+.settings > * {
+  display: flex;
+}
+
+.settings > * > * {
+  flex: 1 1 auto;
+}
+
+.settings > * > :first-child {
+  min-width: 5em;
+  flex-grow: 0;
+}
+
 .settings span {
   display: inline-block;
   min-width: 5em;
+  vertical-align: top;
 }
 
-.settings label+label {
-  margin-left: .5em;
+.settings label {
+  white-space: nowrap;
+  display: inline-block;
+  margin-right: .5em;
 }

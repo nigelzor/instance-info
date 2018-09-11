@@ -33,12 +33,20 @@ const columnOptions = [
 const priceOptions = ['Linux', 'Windows'];
 
 const reserveOptions = [
-  { name: 'On Demand', value: (c) => c.OnDemand && c.OnDemand[1] },
-  { name: '1yr - standard - No Upfront', value: (c) => {
-      const rate = c.Reserved.find((r) => r.name === this.name);
-      return rate && rate.blended && rate.blended[1];
-  } }
+  { name: 'On Demand', value: (c) => c && c.OnDemand && c.OnDemand[1] },
 ];
+
+['standard', 'convertible'].forEach((type) => {
+  ['1yr', '3yr'].forEach((length) => {
+    ['No Upfront', 'Partial Upfront', 'All Upfront'].forEach((upfront) => {
+      const name = `${length} - ${type} - ${upfront}`;
+      reserveOptions.push({ name, value: (c) => {
+          const rate = c && c.Reserved && c.Reserved.find((r) => r.name === name);
+          return rate && rate.blended && rate.blended[1];
+      } })
+    });
+  });
+});
 
 const state = window.state || (window.state = {
   region,
@@ -95,22 +103,59 @@ function togglePriceColumn() {
   rerender();
 }
 
-function render0(state) {
-  const region = regions.find(r => r.id === state.region) || regions[0];
+function toggleReserveColumn() {
+  const label = this.parentNode.textContent;
+  const names = new Set(state.reserveColumns.map((c) => c.name));
+  names.delete(label) || names.add(label);
+  state.reserveColumns = reserveOptions.filter((c) => names.has(c.name));
+  rerender();
+}
+
+function renderColumns(state, t) {
+  return state.columns.map((c) => c.render ? c.render(t) : html`<td>${c.value(t)}</td>`)
+}
+
+function renderPriceColumns(state, t, tc) {
   const scale = priceScales[state.priceScale] || 1;
-  const onDemandCost = (c) => {
-    if (c && c.OnDemand) {
-      const d = round(c.OnDemand[1] * scale, 4);
+  const formatCost = (c) => {
+    if (c != null) {
+      const d = round(c * scale, 4);
       return `$ ${d}`
     }
   };
+  const cols = [];
+  for (const pc of state.priceColumns) {
+    const tpc = tc.find((c) => c.Name === pc);
+    for (const rc of state.reserveColumns) {
+      try {
+        cols.push(html`<td>${formatCost(rc.value(tpc))}</td>`);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
+  return cols;
+}
+
+function renderPriceHeaders(state) {
+  const cols = [];
+  for (const pc of state.priceColumns) {
+    for (const rc of state.reserveColumns) {
+      cols.push(html`<th>${pc} ${rc.name}</th>`);
+    }
+  }
+  return cols;
+}
+
+function render0(state) {
+  const region = regions.find(r => r.id === state.region) || regions[0];
   return region.load().then(costs => {
     function makeRow(t) {
       const tc = (costs[t.instanceType] || []).filter(c => c.Tenancy === 'Shared');
       return html`
       <tr id=${t.instanceType} class=${classnames(state.highlight.has(t.instanceType) && 'highlight')} onclick=${toggleHighlight}>
-        ${state.columns.map((c) => c.render ? c.render(t) : html`<td>${c.value(t)}</td>`)}
-        ${state.priceColumns.map((n) => html`<td>${onDemandCost(tc.find((c) => c.Name === n))}</td>`)}
+        ${renderColumns(state, t)}
+        ${renderPriceColumns(state, t, tc)}
       </tr>
       `;
     }
@@ -119,28 +164,31 @@ function render0(state) {
 <div>
   <div class="settings">
     <div>
-      <label><span>Region:</span> 
+      <label>Region:</label>
+      <div> 
         <select onchange=${setRegion}>${regions.map(r => html`<option selected=${r.id === state.region} value=${r.id}>${r.label}</option>`)}</select>
-      </label>
+      </div>
     </div>
     <div>
-      <span>Columns:</span>
-      ${columnOptions.map((c) => html`<label><input type="checkbox" checked=${state.columns.find((sc) => sc.name === c.name) != null} onchange=${toggleColumn} />${c.name}</label>`)}
+      <label>Columns:</label>
+      <div>
+        ${columnOptions.map((c) => html`<label><input type="checkbox" checked=${state.columns.find((sc) => sc.name === c.name) != null} onchange=${toggleColumn} />${c.name}</label>`)}
+      </div>
     </div>
     <div>
-      <span>Prices:</span> 
-      <span>
+      <label>Prices:</label> 
+      <div>
         <div>${priceOptions.map((c) => html`<label><input type="checkbox" checked=${state.priceColumns.includes(c)} onchange=${togglePriceColumn} />${c}</label>`)}</div>
-        <div>${reserveOptions.map((r) => html`<label><input type="checkbox" />${r.name}</label>`)}</div>
-      </span>  
-      <label>per <select onchange=${setPriceScale}>${Object.keys(priceScales).map(r => html`<option selected=${r === state.priceScale} value=${r}>${r}</option>`)}</select></label>
+        <div>${reserveOptions.map((r) => html`<label><input type="checkbox" checked=${state.reserveColumns.find((rc) => rc.name === r.name) != null} onchange=${toggleReserveColumn} />${r.name}</label>`)}</div>
+        <div><label>per <select onchange=${setPriceScale}>${Object.keys(priceScales).map(r => html`<option selected=${r === state.priceScale} value=${r}>${r}</option>`)}</select></label></div>
+      </div>
     </div>
   </div>
   <table>
     <thead>
       <tr>
         ${state.columns.map((c) => html`<th>${c.name}</th>`)}
-        ${state.priceColumns.map((c) => html`<th>${c} $/${state.priceScale}</th>`)}
+        ${renderPriceHeaders(state)}
       </tr>
     </thead>
     <tbody>
