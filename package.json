@@ -4,6 +4,7 @@
   "author": "Neil Gentleman <ngentleman@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "test": "jest",
     "build": "make && parcel build --experimental-scope-hoisting src/index.html",
     "start": "make && parcel serve --no-autoinstall src/index.html"
   },
@@ -12,6 +13,7 @@
     "nanohtml": "^1.2.4"
   },
   "devDependencies": {
+    "jest": "^23.5.0",
     "parcel-bundler": "^1.9.7"
   }
 }
