@@ -92,6 +92,8 @@ function priceName(p) {
 
 const ec2 = {};
 const ec2pricing = {};
+const priceNames = new Set();
+const reservationNames = new Set();
 
 instanceProducts.forEach(p => {
   const { location, instanceType } = p.attributes;
@@ -115,12 +117,18 @@ instanceProducts.forEach(p => {
   if (!ec2pricing[location][instanceType]) {
     ec2pricing[location][instanceType] = [];
   }
+  const pn = priceName(p);
+  priceNames.add(pn);
+  const reservedPrices = reservedPrice(p.sku);
+  if (reservedPrices) {
+    reservedPrices.forEach(rp => reservationNames.add(rp.name));
+  }
   ec2pricing[location][instanceType].push({
     // Region: location,
-    Name: priceName(p),
+    Name: pn,
     Tenancy: p.attributes.tenancy,
     OnDemand: onDemandPrice(p.sku),
-    Reserved: reservedPrice(p.sku),
+    Reserved: reservedPrices,
   });
 });
 
@@ -135,4 +143,8 @@ function write(file, json) {
 write('ec2.json', ec2);
 Object.keys(ec2pricing).forEach(r => {
   write(regionFiles.get(r), ec2pricing[r]);
+});
+write('purchase-options.json', {
+  names: [...priceNames],
+  reservations: [...reservationNames],
 });

@@ -1,6 +1,7 @@
 import html from 'nanohtml';
 import regions from './regions';
 import types from '../data/ec2.json';
+import options from '../data/purchase-options.json';
 import classnames from 'classnames';
 import { instanceTypeCompare } from "./sort";
 
@@ -30,23 +31,17 @@ const columnOptions = [
   { name: 'Network Performance', value: (t) => t.info.networkPerformance },
 ];
 
-const priceOptions = ['Linux', 'Windows'];
+const priceOptions = options.names.sort();
 
 const reserveOptions = [
   { name: 'On Demand', value: (c) => c && c.OnDemand && c.OnDemand[1] },
+  ...options.reservations.sort().map((name) => (
+    { name, value: (c) => {
+      const rate = c && c.Reserved && c.Reserved.find((r) => r.name === name);
+      return rate && rate.blended && rate.blended[1];
+    } }
+  )),
 ];
-
-['standard', 'convertible'].forEach((type) => {
-  ['1yr', '3yr'].forEach((length) => {
-    ['No Upfront', 'Partial Upfront', 'All Upfront'].forEach((upfront) => {
-      const name = `${length} - ${type} - ${upfront}`;
-      reserveOptions.push({ name, value: (c) => {
-          const rate = c && c.Reserved && c.Reserved.find((r) => r.name === name);
-          return rate && rate.blended && rate.blended[1];
-      } })
-    });
-  });
-});
 
 const state = window.state || (window.state = {
   region,
