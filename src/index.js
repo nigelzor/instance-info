@@ -13,11 +13,41 @@ const priceScales = {
   year: 24 * 365,
 };
 
+function round(n, places) {
+  const x = Math.pow(10, places);
+  return Math.round(n * x) / x;
+}
+
+const columnOptions = [
+  { name: 'Name', value: (t) => t.instanceType },
+  { name: 'Memory', value: (t) => t.info.memory, render: (t) => html`<td class="right">${t.info.memory}</td>` },
+  { name: 'ECU', value: (t) => t.info.ecu },
+  { name: 'vCPUs', value: (t) => t.info.vcpu },
+  { name: 'ECU/vCPU', value: (t) => round(t.info.ecu / t.info.vcpu, 2) },
+  { name: 'Physical Processor', value: (t) => t.info.physicalProcessor },
+  { name: 'Clock Speed', value: (t) => t.info.clockSpeed },
+  { name: 'Instance Storage', value: (t) => t.info.storage },
+  { name: 'Network Performance', value: (t) => t.info.networkPerformance },
+];
+
+const priceOptions = ['Linux', 'Windows'];
+
+const reserveOptions = [
+  { name: 'On Demand', value: (c) => c.OnDemand && c.OnDemand[1] },
+  { name: '1yr - standard - No Upfront', value: (c) => {
+      const rate = c.Reserved.find((r) => r.name === this.name);
+      return rate && rate.blended && rate.blended[1];
+  } }
+];
+
 const state = window.state || (window.state = {
   region,
   types: Object.values(types),
   highlight: new Set(),
   priceScale: 'hour',
+  columns: columnOptions.filter((c, i) => i < 2 || i === 3 || i > 6),
+  priceColumns: priceOptions.slice(0, 1),
+  reserveColumns: reserveOptions.slice(0, 1),
 });
 
 state.types.sort((a, b) => instanceTypeCompare(a.instanceType, b.instanceType));
@@ -49,55 +79,72 @@ function setPriceScale() {
   rerender();
 }
 
+function toggleColumn() {
+  const label = this.parentNode.textContent;
+  const names = new Set(state.columns.map((c) => c.name));
+  names.delete(label) || names.add(label);
+  state.columns = columnOptions.filter((c) => names.has(c.name));
+  rerender();
+}
+
+function togglePriceColumn() {
+  const label = this.parentNode.textContent;
+  const names = new Set(state.priceColumns.map((c) => c));
+  names.delete(label) || names.add(label);
+  state.priceColumns = priceOptions.filter((c) => names.has(c));
+  rerender();
+}
+
 function render0(state) {
   const region = regions.find(r => r.id === state.region) || regions[0];
   const scale = priceScales[state.priceScale] || 1;
   const onDemandCost = (c) => {
     if (c && c.OnDemand) {
-      const d = Math.round(c.OnDemand[1] * scale * 10000) / 10000;
+      const d = round(c.OnDemand[1] * scale, 4);
       return `$ ${d}`
     }
   };
   return region.load().then(costs => {
     function makeRow(t) {
-      const cost = (costs[t.instanceType] || []).find(c => c.Tenancy === 'Shared' && c.Name === 'Linux');
+      const tc = (costs[t.instanceType] || []).filter(c => c.Tenancy === 'Shared');
       return html`
       <tr id=${t.instanceType} class=${classnames(state.highlight.has(t.instanceType) && 'highlight')} onclick=${toggleHighlight}>
-        <td>${t.instanceType}</td>
-        <td class="right">${t.info.memory}</td>
-        <td>${t.info.ecu}</td>
-        <td>${t.info.vcpu}</td>
-        <td class="right">${t.info.storage}</td>
-        <td>${t.info.networkPerformance}</td>
-        <td>${onDemandCost(cost)}</td>
+        ${state.columns.map((c) => c.render ? c.render(t) : html`<td>${c.value(t)}</td>`)}
+        ${state.priceColumns.map((n) => html`<td>${onDemandCost(tc.find((c) => c.Name === n))}</td>`)}
       </tr>
       `;
     }
 
     return html`
 <div>
-  <div>
-    <label>Region: 
-      <select onchange=${setRegion}>${regions.map(r => html`<option selected=${r.id === state.region} value=${r.id}>${r.label}</option>`)}</select>
-    </label>
-    <label>Prices: 
-      <select onchange=${setPriceScale}>${Object.keys(priceScales).map(r => html`<option selected=${r === state.priceScale} value=${r}>${r}</option>`)}</select>
-    </label>
+  <div class="settings">
+    <div>
+      <label><span>Region:</span> 
+        <select onchange=${setRegion}>${regions.map(r => html`<option selected=${r.id === state.region} value=${r.id}>${r.label}</option>`)}</select>
+      </label>
+    </div>
+    <div>
+      <span>Columns:</span>
+      ${columnOptions.map((c) => html`<label><input type="checkbox" checked=${state.columns.find((sc) => sc.name === c.name) != null} onchange=${toggleColumn} />${c.name}</label>`)}
+    </div>
+    <div>
+      <span>Prices:</span> 
+      <span>
+        <div>${priceOptions.map((c) => html`<label><input type="checkbox" checked=${state.priceColumns.includes(c)} onchange=${togglePriceColumn} />${c}</label>`)}</div>
+        <div>${reserveOptions.map((r) => html`<label><input type="checkbox" />${r.name}</label>`)}</div>
+      </span>  
+      <label>per <select onchange=${setPriceScale}>${Object.keys(priceScales).map(r => html`<option selected=${r === state.priceScale} value=${r}>${r}</option>`)}</select></label>
+    </div>
   </div>
   <table>
     <thead>
       <tr>
-        <th>Name</th>
-        <th>Memory</th>
-        <th>ECU</th>
-        <th>vCPUs</th>
-        <th>Instance Storage</th>
-        <th>Network Performance</th>
-        <th>Linux $/${state.priceScale}</th>
+        ${state.columns.map((c) => html`<th>${c.name}</th>`)}
+        ${state.priceColumns.map((c) => html`<th>${c} $/${state.priceScale}</th>`)}
       </tr>
     </thead>
     <tbody>
-      ${Object.values(state.types).map(makeRow)}
+      ${state.types.map(makeRow)}
     </tbody>
   </table>
 </div>
