@@ -44,14 +44,32 @@ const reserveOptions = [
   )),
 ];
 
+function parseStorage(s) {
+  const match = /(\d+) x (\d+)/.exec(s);
+  if (match) {
+    return parseFloat(match[1]) * parseFloat(match[2]);
+  }
+  return parseFloat(s) || 0;
+}
+
 const state = window.state || (window.state = {
   region,
-  types: Object.values(types),
+  types: Object.values(types).map((t) => Object.assign({}, t, {
+    memory: parseFloat(t.info.memory.replace(/,/g, '')),
+    vcpu: parseFloat(t.info.vcpu),
+    storage: parseStorage(t.info.storage),
+  })),
   highlight: new Set(),
   priceScale: 'hour',
   columns: columnOptions.filter((c, i) => i < 2 || i === 3 || i > 6),
   priceColumns: priceOptions.slice(0, 1),
   reserveColumns: reserveOptions.slice(0, 1),
+  filter: {
+    memory: 0,
+    vcpu: 0,
+    storage: 0,
+    unavailable: true,
+  }
 });
 
 state.types.sort((a, b) => instanceTypeCompare(a.instanceType, b.instanceType));
@@ -107,6 +125,26 @@ function toggleReserveColumn() {
   rerender();
 }
 
+function toggleFilterUnavailable() {
+  state.filter.unavailable = !state.filter.unavailable;
+  rerender();
+}
+
+function updateFilterMemory() {
+  state.filter.memory = this.value;
+  rerender();
+}
+
+function updateFilterVcpu() {
+  state.filter.vcpu = this.value;
+  rerender();
+}
+
+function updateFilterStorage() {
+  state.filter.storage = this.value;
+  rerender();
+}
+
 function renderColumns(state, t) {
   return state.columns.map((c) => c.render ? c.render(t) : html`<td>${c.value(t)}</td>`)
 }
@@ -143,6 +181,14 @@ function renderPriceHeaders(state) {
   return cols;
 }
 
+function renderPriceOptions(state) {
+  return priceOptions.map((c) => html`<label><input type="checkbox" checked=${state.priceColumns.includes(c)} onchange=${togglePriceColumn} />${c}</label>`);
+}
+
+function renderReserveOption(state, r) {
+  return html`<label><input type="checkbox" checked=${state.reserveColumns.find((rc) => rc.name === r.name) != null} onchange=${toggleReserveColumn} />${r.name}</label>`;
+}
+
 function render0(state) {
   const region = regions.find(r => r.id === state.region) || regions[0];
   return region.load().then(costs => {
@@ -156,28 +202,47 @@ function render0(state) {
       `;
     }
 
+    function typeFilter(t) {
+      if (state.filter.unavailable && !costs[t.instanceType]) {
+        return false;
+      }
+      if (state.filter.memory != null && t.memory < state.filter.memory) {
+        return false;
+      }
+      if (state.filter.vcpu != null && t.vcpu < state.filter.vcpu) {
+        return false;
+      }
+      if (state.filter.storage != null && t.storage < state.filter.storage) {
+        return false;
+      }
+      return true;
+    }
+
     return html`
 <div>
   <div class="settings">
-    <div>
-      <label>Region:</label>
-      <div> 
-        <select onchange=${setRegion}>${regions.map(r => html`<option selected=${r.id === state.region} value=${r.id}>${r.label}</option>`)}</select>
-      </div>
+    <label>Region:</label>
+    <div> 
+      <select onchange=${setRegion}>${regions.map(r => html`<option selected=${r.id === state.region} value=${r.id}>${r.label}</option>`)}</select>
     </div>
+    <label>Columns:</label>
     <div>
-      <label>Columns:</label>
-      <div>
-        ${columnOptions.map((c) => html`<label><input type="checkbox" checked=${state.columns.find((sc) => sc.name === c.name) != null} onchange=${toggleColumn} />${c.name}</label>`)}
-      </div>
+      ${columnOptions.map((c) => html`<label><input type="checkbox" checked=${state.columns.find((sc) => sc.name === c.name) != null} onchange=${toggleColumn} />${c.name}</label>`)}
     </div>
+    <label>Prices:</label> 
     <div>
-      <label>Prices:</label> 
-      <div>
-        <div>${priceOptions.map((c) => html`<label><input type="checkbox" checked=${state.priceColumns.includes(c)} onchange=${togglePriceColumn} />${c}</label>`)}</div>
-        <div>${reserveOptions.map((r) => html`<label><input type="checkbox" checked=${state.reserveColumns.find((rc) => rc.name === r.name) != null} onchange=${toggleReserveColumn} />${r.name}</label>`)}</div>
-        <div><label>per <select onchange=${setPriceScale}>${Object.keys(priceScales).map(r => html`<option selected=${r === state.priceScale} value=${r}>${r}</option>`)}</select></label></div>
-      </div>
+      <div><label>per <select onchange=${setPriceScale}>${Object.keys(priceScales).map(r => html`<option selected=${r === state.priceScale} value=${r}>${r}</option>`)}</select></label></div>
+      <div>${renderPriceOptions(state)}</div>
+      <div>${reserveOptions.filter((ro) => ro.name === 'On Demand').map((ro) => renderReserveOption(state, ro))}</div>
+      <div>${reserveOptions.filter((ro) => /standard/.test(ro.name)).map((ro) => renderReserveOption(state, ro))}</div>
+      <div>${reserveOptions.filter((ro) => /convertible/.test(ro.name)).map((ro) => renderReserveOption(state, ro))}</div>
+    </div>
+    <label>Filter:</label>
+    <div>
+      <label>Memory: <input type="number" value=${state.filter.memory} onchange=${updateFilterMemory} /></label>
+      <label>vCPUs: <input type="number" value=${state.filter.vcpu} onchange=${updateFilterVcpu} /></label>
+      <label>Storage: <input type="number" value=${state.filter.storage} onchange=${updateFilterStorage} /></label>
+      <label>Hide Unavailable: <input type="checkbox" checked=${state.filter.unavailable} onchange=${toggleFilterUnavailable} /></label>
     </div>
   </div>
   <table>
@@ -188,7 +253,7 @@ function render0(state) {
       </tr>
     </thead>
     <tbody>
-      ${state.types.map(makeRow)}
+      ${state.types.filter(typeFilter).map(makeRow)}
     </tbody>
   </table>
 </div>

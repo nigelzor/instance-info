@@ -29,33 +29,20 @@ tbody tr.highlight:hover {
 
 .settings {
   margin-bottom: 1em;
+  display: grid;
+  grid-template-columns: auto 1fr;
+}
+
+.settings > *:nth-child(-n+2) {
+  border-top: none;
 }
 
 .settings > * {
-  display: flex;
-  padding: 2px 0;
+  border-top: 1px solid #ccc;
+  padding: 2px;
 }
 
-.settings > * + * {
-  border-top: 1px solid #eee;
-}
-
-.settings > * > * {
-  flex: 1 1 auto;
-}
-
-.settings > * > :first-child {
-  min-width: 5em;
-  flex-grow: 0;
-}
-
-.settings span {
-  display: inline-block;
-  min-width: 5em;
-  vertical-align: top;
-}
-
-.settings label {
+.settings > * label {
   white-space: nowrap;
   display: inline-block;
   margin-right: .5em;
