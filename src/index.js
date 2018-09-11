@@ -3,7 +3,7 @@ import regions from './regions';
 import types from '../data/ec2.json';
 import options from '../data/purchase-options.json';
 import classnames from 'classnames';
-import { instanceTypeCompare } from "./sort";
+import { instanceTypeCompare, reservationCompare } from "./sort";
 
 const region = 'us-east-1';
 
@@ -31,11 +31,12 @@ const columnOptions = [
   { name: 'Network Performance', value: (t) => t.info.networkPerformance },
 ];
 
-const priceOptions = options.names.sort();
+// BYOL is the same price as Linux, so doesn't add any information
+const priceOptions = options.names.filter((n) => n !== 'Windows - Bring your own license').sort();
 
 const reserveOptions = [
   { name: 'On Demand', value: (c) => c && c.OnDemand && c.OnDemand[1] },
-  ...options.reservations.sort().map((name) => (
+  ...options.reservations.sort(reservationCompare).map((name) => (
     { name, value: (c) => {
       const rate = c && c.Reserved && c.Reserved.find((r) => r.name === name);
       return rate && rate.blended && rate.blended[1];

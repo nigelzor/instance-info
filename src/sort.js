@@ -17,3 +17,15 @@ exports.instanceTypeCompare = function instanceTypeCompare(a, b) {
   if (as > bs) return 1;
   if (as < bs) return -1;
 };
+
+exports.reservationCompare = function reservationCompare(a, b) {
+  if (a === b) return 0;
+  const [ay, ac, au] = a.split(' - ', 3);
+  const [by, bc, bu] = b.split(' - ', 3);
+  if (ac > bc) return -1;
+  if (ac < bc) return 1;
+  if (ay > by) return 1;
+  if (ay < by) return -1;
+  if (au > bu) return 1;
+  if (au < bu) return -1;
+};
