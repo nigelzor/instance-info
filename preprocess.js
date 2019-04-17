@@ -4,6 +4,7 @@ const path = require('path');
 const util = require('util');
 
 const regions = [
+  { id: 'us-gov-east-1', label: 'AWS GovCloud (US-East)' },
   { id: 'us-gov-west-1', label: 'AWS GovCloud (US)' },
   { id: 'ap-south-1', label: 'Asia Pacific (Mumbai)' },
   { id: 'ap-northeast-1', label: 'Asia Pacific (Tokyo)' },
@@ -67,7 +68,7 @@ function reservedPrice(sku) {
 }
 
 function isHourlyCost(priceDimension) {
-  return priceDimension.beginRange === '0' && priceDimension.endRange === 'Inf' && priceDimension.unit === 'Hrs' && priceDimension.appliesTo.length === 0;
+  return priceDimension.beginRange === '0' && priceDimension.endRange === 'Inf' && (priceDimension.unit === 'Hours' || priceDimension.unit === 'Hrs') && priceDimension.appliesTo.length === 0;
 }
 
 function isUpfrontCost(priceDimension) {
@@ -142,6 +143,9 @@ function write(file, json) {
 
 write('ec2.json', ec2);
 Object.keys(ec2pricing).forEach(r => {
+  if (!regionFiles.has(r)) {
+    throw new Error('Unrecognized region ' + r);
+  }
   write(regionFiles.get(r), ec2pricing[r]);
 });
 write('purchase-options.json', {

@@ -8,5 +8,5 @@ data:
 	mkdir -p data
 
 data/ec2.json: preprocess.js offers/v1.0/aws/AmazonEC2/current/index.json | data
-	./preprocess.js
+	NODE_OPTIONS=--max_old_space_size=4096 ./preprocess.js
 

@@ -20,15 +20,24 @@ function round(n, places) {
   return Math.round(n * x) / x;
 }
 
+function sortBy(name) {
+  return (a, b) => {
+    if (a === b) return 0;
+    if (a[name] > b[name]) return 1;
+    if (a[name] < b[name]) return -1;
+    return 0;
+  }
+}
+
 const columnOptions = [
-  { name: 'Name', value: (t) => t.instanceType },
-  { name: 'Memory', value: (t) => t.info.memory, render: (t) => html`<td class="right">${t.info.memory}</td>` },
+  { name: 'Name', value: (t) => t.instanceType, sort: (a, b) => instanceTypeCompare(a.instanceType, b.instanceType) },
+  { name: 'Memory', value: (t) => t.info.memory, render: (t) => html`<td class="right">${t.info.memory}</td>`, sort: sortBy('memory') },
   { name: 'ECU', value: (t) => t.info.ecu },
-  { name: 'vCPUs', value: (t) => t.info.vcpu },
+  { name: 'vCPUs', value: (t) => t.info.vcpu, sort: sortBy('vcpu') },
   { name: 'ECU/vCPU', value: (t) => round(t.info.ecu / t.info.vcpu, 2) },
   { name: 'Physical Processor', value: (t) => t.info.physicalProcessor },
   { name: 'Clock Speed', value: (t) => t.info.clockSpeed },
-  { name: 'Instance Storage', value: (t) => t.info.storage },
+  { name: 'Instance Storage', value: (t) => t.info.storage, sort: sortBy('storage') },
   { name: 'Network Performance', value: (t) => t.info.networkPerformance },
 ];
 
@@ -150,7 +159,8 @@ function renderColumns(state, t) {
   return state.columns.map((c) => c.render ? c.render(t) : html`<td>${c.value(t)}</td>`)
 }
 
-function renderPriceColumns(state, t, tc) {
+function renderPriceColumns(state, t, costs) {
+  const tc = (costs[t.instanceType] || []).filter(c => c.Tenancy === 'Shared');
   const scale = priceScales[state.priceScale] || 1;
   const formatCost = (c) => {
     if (c != null) {
@@ -170,6 +180,16 @@ function renderPriceColumns(state, t, tc) {
     }
   }
   return cols;
+}
+
+function renderColumnHeaders(state) {
+  return state.columns.map((c) => {
+    const sort = () => {
+      state.types.sort(c.sort);
+      rerender();
+    };
+    return html`<th onclick=${sort}>${c.name}</th>`;
+  })
 }
 
 function renderPriceHeaders(state) {
@@ -194,11 +214,10 @@ function render0(state) {
   const region = regions.find(r => r.id === state.region) || regions[0];
   return region.load().then(costs => {
     function makeRow(t) {
-      const tc = (costs[t.instanceType] || []).filter(c => c.Tenancy === 'Shared');
       return html`
       <tr id=${t.instanceType} class=${classnames(state.highlight.has(t.instanceType) && 'highlight')} onclick=${toggleHighlight}>
         ${renderColumns(state, t)}
-        ${renderPriceColumns(state, t, tc)}
+        ${renderPriceColumns(state, t, costs)}
       </tr>
       `;
     }
@@ -249,7 +268,7 @@ function render0(state) {
   <table>
     <thead>
       <tr>
-        ${state.columns.map((c) => html`<th>${c.name}</th>`)}
+        ${renderColumnHeaders(state)}
         ${renderPriceHeaders(state)}
       </tr>
     </thead>
