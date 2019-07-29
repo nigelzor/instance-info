@@ -11,8 +11,8 @@ const region = 'us-east-1';
 const priceScales = {
   hour: 1,
   day: 24,
-  month: 24 * 30,
-  year: 24 * 365,
+  month: 24 * 30.42,
+  year: 24 * 365.25,
 };
 
 function round(n, places) {
