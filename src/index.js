@@ -67,7 +67,7 @@ const state = window.state || (window.state = {
   types: Object.values(types).map((t) => Object.assign({}, t, {
     memory: parseFloat(t.info.memory.replace(/,/g, '')),
     vcpu: parseFloat(t.info.vcpu),
-    storage: parseStorage(t.info.storage),
+    storage: parseStorage(t.info.storage.replace(/,/g, '')),
   })),
   highlight: new Set(),
   priceScale: 'hour',
