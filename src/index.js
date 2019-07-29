@@ -79,10 +79,11 @@ const state = window.state || (window.state = {
     vcpu: 0,
     storage: 0,
     unavailable: true,
-  }
+  },
+  sort: [columnOptions[0], true]
 });
 
-state.types.sort((a, b) => instanceTypeCompare(a.instanceType, b.instanceType));
+state.types.sort(columnOptions[0].sort);
 
 let pending = false;
 function rerender() {
@@ -182,13 +183,23 @@ function renderPriceColumns(state, t, costs) {
   return cols;
 }
 
+function reverse(compare) {
+  return (a, b) => compare(b, a);
+}
+
 function renderColumnHeaders(state) {
   return state.columns.map((c) => {
+    if (!c.sort) {
+      return html`<th>${c.name}</th>`;
+    }
+    const active = state.sort[0] === c;
+    const direction = active && state.sort[1];
     const sort = () => {
-      state.types.sort(c.sort);
+      state.sort = [c, !direction];
+      state.types.sort(direction ? reverse(c.sort) : c.sort);
       rerender();
     };
-    return html`<th onclick=${sort}>${c.name}</th>`;
+    return html`<th onclick=${sort} class=${classnames('sortable', active && `sort-${direction}`)}>${c.name}</th>`;
   })
 }
 

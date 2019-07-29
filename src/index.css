@@ -27,6 +27,32 @@ tbody tr.highlight:hover {
   background-color: #75bdf0;
 }
 
+th.sortable {
+  cursor: pointer;
+  position: relative;
+}
+
+th.sort-true,
+th.sort-false {
+  padding-right: 0.8em;
+}
+
+th.sort-true::after,
+th.sort-false::after {
+  color: #999;
+  position: absolute;
+  right: 3px;
+  font-size: smaller;
+}
+
+th.sort-true::after {
+  content: '↑';
+}
+
+th.sort-false::after {
+  content: '↓';
+}
+
 .settings {
   margin-bottom: 1em;
   display: grid;
