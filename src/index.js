@@ -160,7 +160,7 @@ function renderColumns(state, t) {
 }
 
 function renderPriceColumns(state, t, costs) {
-  const tc = (costs[t.instanceType] || []).filter(c => c.Tenancy === 'Shared');
+  const tc = costs[t.instanceType] || [];
   const scale = priceScales[state.priceScale] || 1;
   const formatCost = (c) => {
     if (c != null) {

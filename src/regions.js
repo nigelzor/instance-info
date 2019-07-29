@@ -1,5 +1,7 @@
 const regions = [
+  { id: 'us-gov-east-1', label: 'AWS GovCloud (US-East)', load: () => import('../data/ec2-us-gov-east-1.json') },
   { id: 'us-gov-west-1', label: 'AWS GovCloud (US)', load: () => import('../data/ec2-us-gov-west-1.json') },
+  { id: 'ap-east-1', label: 'Asia Pacific (Hong Kong)', load: () => import('../data/ec2-ap-east-1.json') },
   { id: 'ap-south-1', label: 'Asia Pacific (Mumbai)', load: () => import('../data/ec2-ap-south-1.json') },
   { id: 'ap-northeast-1', label: 'Asia Pacific (Tokyo)', load: () => import('../data/ec2-ap-northeast-1.json') },
   { id: 'ap-northeast-3', label: 'Asia Pacific (Osaka-Local)', load: () => import('../data/ec2-ap-northeast-3.json') },
@@ -8,6 +10,7 @@ const regions = [
   { id: 'ap-southeast-2', label: 'Asia Pacific (Sydney)', load: () => import('../data/ec2-ap-southeast-2.json') },
   { id: 'ca-central-1', label: 'Canada (Central)', load: () => import('../data/ec2-ca-central-1.json') },
   { id: 'eu-central-1', label: 'EU (Frankfurt)', load: () => import('../data/ec2-eu-central-1.json') },
+  { id: 'eu-north-1', label: 'EU (Stockholm)', load: () => import('../data/ec2-eu-north-1.json') },
   { id: 'eu-west-1', label: 'EU (Ireland)', load: () => import('../data/ec2-eu-west-1.json') },
   { id: 'eu-west-2', label: 'EU (London)', load: () => import('../data/ec2-eu-west-2.json') },
   { id: 'eu-west-3', label: 'EU (Paris)', load: () => import('../data/ec2-eu-west-3.json') },

@@ -6,6 +6,7 @@ const util = require('util');
 const regions = [
   { id: 'us-gov-east-1', label: 'AWS GovCloud (US-East)' },
   { id: 'us-gov-west-1', label: 'AWS GovCloud (US)' },
+  { id: 'ap-east-1', label: 'Asia Pacific (Hong Kong)' },
   { id: 'ap-south-1', label: 'Asia Pacific (Mumbai)' },
   { id: 'ap-northeast-1', label: 'Asia Pacific (Tokyo)' },
   { id: 'ap-northeast-3', label: 'Asia Pacific (Osaka-Local)' },
@@ -14,6 +15,7 @@ const regions = [
   { id: 'ap-southeast-2', label: 'Asia Pacific (Sydney)' },
   { id: 'ca-central-1', label: 'Canada (Central)' },
   { id: 'eu-central-1', label: 'EU (Frankfurt)' },
+  { id: 'eu-north-1', label: 'EU (Stockholm)' },
   { id: 'eu-west-1', label: 'EU (Ireland)' },
   { id: 'eu-west-2', label: 'EU (London)' },
   { id: 'eu-west-3', label: 'EU (Paris)' },
@@ -23,12 +25,16 @@ const regions = [
   { id: 'us-west-1', label: 'US West (N. California)' },
   { id: 'us-west-2', label: 'US West (Oregon)' },
 ];
+const regionFiles = new Map(regions.map((r) => [r.label, `ec2-${r.id}.json`]));
 
 const offers = JSON.parse(fs.readFileSync(path.join(__dirname, './offers/v1.0/aws/AmazonEC2/current/index.json'), 'utf8'));
 const products = Object.values(offers.products);
-const instanceProducts = products.filter(p => p.productFamily === 'Compute Instance'
+const instanceProducts = products.filter(p =>
+     p.productFamily === 'Compute Instance'
   && p.attributes.operation.startsWith('RunInstances') // filter out bad data
-  && p.attributes.tenancy !== 'Host'); // you need to pay for the dedicated host separately, so this isn't helpful
+  && p.attributes.tenancy === 'Shared' // 'Dedicated', 'Host' aren't useful
+  && p.attributes.capacitystatus === 'Used' // ignore Capacity Reservations
+);
 
 function only(o) {
   if (o) {
@@ -125,15 +131,11 @@ instanceProducts.forEach(p => {
     reservedPrices.forEach(rp => reservationNames.add(rp.name));
   }
   ec2pricing[location][instanceType].push({
-    // Region: location,
     Name: pn,
-    Tenancy: p.attributes.tenancy,
     OnDemand: onDemandPrice(p.sku),
     Reserved: reservedPrices,
   });
 });
-
-const regionFiles = new Map(regions.map((r) => [r.label, `ec2-${r.id}.json`]));
 
 function write(file, json) {
   const content = JSON.stringify(json);
