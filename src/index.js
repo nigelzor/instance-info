@@ -213,15 +213,20 @@ function renderPriceHeaders(state, costs) {
       const priceCompare = (a, b) => {
         const tca = costs[a.instanceType];
         const tcb = costs[b.instanceType];
-        const tpca = tca.find((c) => c.Name === pc);
-        const tpcb = tcb.find((c) => c.Name === pc);
+        const tpca = tca && tca.find((c) => c.Name === pc);
+        const tpcb = tcb && tcb.find((c) => c.Name === pc);
         const av = rc.value(tpca);
         const bv = rc.value(tpcb);
-        return av - bv;
+
+        // we always want NaN at the end, regardless of direction
+        if (isFinite(av - bv)) {
+          return direction ? bv - av : av - bv;
+        }
+        return isFinite(av) ? -1 : 1;
       };
       const sort = () => {
         state.sort = [name, !direction];
-        state.types.sort(direction ? reverse(priceCompare) : priceCompare);
+        state.types.sort(priceCompare);
         rerender();
       };
       cols.push(html`<th onclick=${sort} class=${classnames('sortable', active && `sort-${direction}`)}>${name}</th>`);
