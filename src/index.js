@@ -203,11 +203,28 @@ function renderColumnHeaders(state) {
   })
 }
 
-function renderPriceHeaders(state) {
+function renderPriceHeaders(state, costs) {
   const cols = [];
   for (const pc of state.priceColumns) {
     for (const rc of state.reserveColumns) {
-      cols.push(html`<th>${pc} ${rc.name}</th>`);
+      const name = `${pc} ${rc.name}`;
+      const active = state.sort[0] === name;
+      const direction = active && state.sort[1];
+      const priceCompare = (a, b) => {
+        const tca = costs[a.instanceType];
+        const tcb = costs[b.instanceType];
+        const tpca = tca.find((c) => c.Name === pc);
+        const tpcb = tcb.find((c) => c.Name === pc);
+        const av = rc.value(tpca);
+        const bv = rc.value(tpcb);
+        return av - bv;
+      };
+      const sort = () => {
+        state.sort = [name, !direction];
+        state.types.sort(direction ? reverse(priceCompare) : priceCompare);
+        rerender();
+      };
+      cols.push(html`<th onclick=${sort} class=${classnames('sortable', active && `sort-${direction}`)}>${name}</th>`);
     }
   }
   return cols;
@@ -280,7 +297,7 @@ function render0(state) {
     <thead>
       <tr>
         ${renderColumnHeaders(state)}
-        ${renderPriceHeaders(state)}
+        ${renderPriceHeaders(state, costs)}
       </tr>
     </thead>
     <tbody>
