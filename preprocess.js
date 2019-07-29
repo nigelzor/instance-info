@@ -143,7 +143,10 @@ function write(file, json) {
   fs.writeFileSync(path.join(__dirname, 'data', file), content, 'utf8');
 }
 
-write('ec2.json', ec2);
+write('ec2.json', {
+  types: ec2,
+  date: offers.publicationDate,
+});
 Object.keys(ec2pricing).forEach(r => {
   if (!regionFiles.has(r)) {
     throw new Error('Unrecognized region ' + r);

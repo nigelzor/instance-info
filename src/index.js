@@ -1,7 +1,7 @@
 import html from 'nanohtml';
 import morph from 'nanomorph';
 import regions from './regions';
-import types from '../data/ec2.json';
+import { types, date } from '../data/ec2.json';
 import options from '../data/purchase-options.json';
 import classnames from 'classnames';
 import { instanceTypeCompare, reservationCompare } from "./sort";
@@ -304,6 +304,7 @@ function render0(state) {
       ${state.types.filter(typeFilter).map(makeRow)}
     </tbody>
   </table>
+  <p>Prices current as of ${date}</p>
 </div>
   `;
   });
