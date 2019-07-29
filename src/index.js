@@ -75,6 +75,7 @@ const state = window.state || (window.state = {
   priceColumns: priceOptions.slice(0, 1),
   reserveColumns: reserveOptions.slice(0, 1),
   filter: {
+    name: '',
     memory: 0,
     vcpu: 0,
     storage: 0,
@@ -138,6 +139,11 @@ function toggleReserveColumn() {
 
 function toggleFilterUnavailable() {
   state.filter.unavailable = !state.filter.unavailable;
+  rerender();
+}
+
+function updateFilterName() {
+  state.filter.name = this.value;
   rerender();
 }
 
@@ -259,6 +265,9 @@ function render0(state) {
       if (state.filter.unavailable && !costs[t.instanceType]) {
         return false;
       }
+      if (state.filter.name && !t.instanceType.includes(state.filter.name)) {
+        return false;
+      }
       if (state.filter.memory && t.memory < state.filter.memory) {
         return false;
       }
@@ -276,7 +285,8 @@ function render0(state) {
   <div class="settings">
     <label>Region:</label>
     <div> 
-      <select onchange=${setRegion}>${regions.map(r => html`<option selected=${r.id === state.region} value=${r.id}>${r.label}</option>`)}</select>
+      <label><select onchange=${setRegion}>${regions.map(r => html`<option selected=${r.id === state.region} value=${r.id}>${r.label}</option>`)}</select></label>
+      <label>Hide Unavailable: <input type="checkbox" checked=${state.filter.unavailable} onchange=${toggleFilterUnavailable} /></label>
     </div>
     <label>Columns:</label>
     <div>
@@ -292,10 +302,10 @@ function render0(state) {
     </div>
     <label>Filter:</label>
     <div>
+      <label>Name: <input type="text" value=${state.filter.name} oninput=${updateFilterName} onchange=${updateFilterName} /></label>
       <label>Memory: <input type="number" value=${state.filter.memory} oninput=${updateFilterMemory} onchange=${updateFilterMemory} /></label>
       <label>vCPUs: <input type="number" value=${state.filter.vcpu} oninput=${updateFilterVcpu} onchange=${updateFilterVcpu} /></label>
       <label>Storage: <input type="number" value=${state.filter.storage} oninput=${updateFilterStorage} onchange=${updateFilterStorage} /></label>
-      <label>Hide Unavailable: <input type="checkbox" checked=${state.filter.unavailable} onchange=${toggleFilterUnavailable} /></label>
     </div>
   </div>
   <table>
