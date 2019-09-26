@@ -23,8 +23,8 @@ function round(n, places) {
 function sortBy(name) {
   return (a, b) => {
     if (a === b) return 0;
-    if (a[name] > b[name]) return 1;
-    if (a[name] < b[name]) return -1;
+    if (a[name] > b[name] || (Number.isNaN(a[name]) && !Number.isNaN(b[name]))) return 1;
+    if (a[name] < b[name] || (!Number.isNaN(a[name]) && Number.isNaN(b[name]))) return -1;
     return 0;
   }
 }
@@ -32,7 +32,7 @@ function sortBy(name) {
 const columnOptions = [
   { name: 'Name', value: (t) => t.instanceType, sort: (a, b) => instanceTypeCompare(a.instanceType, b.instanceType) },
   { name: 'Memory', value: (t) => t.info.memory, render: (t) => html`<td class="right">${t.info.memory}</td>`, sort: sortBy('memory') },
-  { name: 'ECU', value: (t) => t.info.ecu },
+  { name: 'ECU', value: (t) => t.info.ecu, sort: sortBy('ecu') },
   { name: 'vCPUs', value: (t) => t.info.vcpu, sort: sortBy('vcpu') },
   { name: 'ECU/vCPU', value: (t) => round(t.info.ecu / t.info.vcpu, 2) },
   { name: 'Physical Processor', value: (t) => t.info.physicalProcessor },
@@ -66,6 +66,7 @@ const state = window.state || (window.state = {
   region,
   types: Object.values(types).map((t) => Object.assign({}, t, {
     memory: parseFloat(t.info.memory.replace(/,/g, '')),
+    ecu: parseFloat(t.info.ecu),
     vcpu: parseFloat(t.info.vcpu),
     storage: parseStorage(t.info.storage.replace(/,/g, '')),
   })),
