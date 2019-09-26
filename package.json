@@ -14,7 +14,15 @@
     "nanomorph": "^5.1.3"
   },
   "devDependencies": {
-    "jest": "^23.5.0",
-    "parcel-bundler": "^1.9.7"
+    "jest": "^24.9.0",
+    "parcel-bundler": "^1.12.3",
+    "parcel-plugin-static-files-copy": "^2.2.1"
+  },
+  "staticFiles": {
+    "staticPath": [{
+      "staticPath": "data",
+      "staticOutDir": "data"
+    }],
+    "watcherGlob": "**"
   }
 }

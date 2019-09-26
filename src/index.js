@@ -1,6 +1,6 @@
 import html from 'nanohtml';
 import morph from 'nanomorph';
-import regions from './regions';
+import { regions } from './regions';
 import { types, date } from '../data/ec2.json';
 import options from '../data/purchase-options.json';
 import classnames from 'classnames';
@@ -250,9 +250,14 @@ function renderReserveOption(state, r) {
   return html`<label><input type="checkbox" checked=${state.reserveColumns.find((rc) => rc.name === r.name) != null} onchange=${toggleReserveColumn} />${r.name}</label>`;
 }
 
+function loadRegion(region) {
+  const filename = `data/ec2-${region.id}.json`;
+  return fetch(filename).then((res) => res.json());
+}
+
 function render0(state) {
   const region = regions.find(r => r.id === state.region) || regions[0];
-  return region.load().then(costs => {
+  return loadRegion(region).then(costs => {
     function makeRow(t) {
       return html`
       <tr id=${t.instanceType} class=${classnames(state.highlight.has(t.instanceType) && 'highlight')} onclick=${toggleHighlight}>
