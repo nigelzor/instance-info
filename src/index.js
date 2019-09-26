@@ -45,11 +45,11 @@ const columnOptions = [
 const priceOptions = options.names.filter((n) => n !== 'Windows - Bring your own license').sort();
 
 const reserveOptions = [
-  { name: 'On Demand', value: (c) => c && c.OnDemand && c.OnDemand[1] },
+  { name: 'On Demand', value: (c) => c && c.OnDemand && c.OnDemand },
   ...options.reservations.sort(reservationCompare).map((name) => (
     { name, value: (c) => {
       const rate = c && c.Reserved && c.Reserved.find((r) => r.name === name);
-      return rate && rate.blended && rate.blended[1];
+      return rate && rate.blended;
     } }
   )),
 ];
@@ -286,7 +286,7 @@ function render0(state) {
     <label>Region:</label>
     <div> 
       <label><select onchange=${setRegion}>${regions.map(r => html`<option selected=${r.id === state.region} value=${r.id}>${r.label}</option>`)}</select></label>
-      <label>Hide Unavailable: <input type="checkbox" checked=${state.filter.unavailable} onchange=${toggleFilterUnavailable} /></label>
+      <label>Hide Unavailable Types: <input type="checkbox" checked=${state.filter.unavailable} onchange=${toggleFilterUnavailable} /></label>
     </div>
     <label>Columns:</label>
     <div>

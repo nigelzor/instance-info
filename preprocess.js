@@ -94,6 +94,15 @@ function addCost(a, b) {
   return [a[0], a[1] + b[1]];
 }
 
+function justDollars(a) {
+  if (a) {
+    if (a[0] !== 'USD') {
+      throw new Error('expected ' + util.inspect(a) + ' to be in USD');
+    }
+    return a[1];
+  }
+}
+
 function priceName(p) {
   return [p.attributes.operatingSystem, p.attributes.preInstalledSw, p.attributes.licenseModel].filter(n => n !== 'No License required' && n !== 'NA').join(' - ');
 }
@@ -133,8 +142,10 @@ instanceProducts.forEach(p => {
   }
   ec2pricing[location][instanceType].push({
     Name: pn,
-    OnDemand: onDemandPrice(p.sku),
-    Reserved: reservedPrices,
+    OnDemand: justDollars(onDemandPrice(p.sku)),
+    Reserved: reservedPrices && reservedPrices.map((rp) => ({
+      name: rp.name, upfront: justDollars(rp.upfront), hourly: justDollars(rp.hourly), blended: justDollars(rp.blended)
+    })),
   });
 });
 
