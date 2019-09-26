@@ -14,6 +14,7 @@ const regions = [
   { id: 'eu-west-1', label: 'EU (Ireland)', load: () => import('../data/ec2-eu-west-1.json') },
   { id: 'eu-west-2', label: 'EU (London)', load: () => import('../data/ec2-eu-west-2.json') },
   { id: 'eu-west-3', label: 'EU (Paris)', load: () => import('../data/ec2-eu-west-3.json') },
+  { id: 'me-south-1', label: 'Middle East (Bahrain)', load: () => import('../data/ec2-me-south-1.json') },
   { id: 'sa-east-1', label: 'South America (Sao Paulo)', load: () => import('../data/ec2-sa-east-1.json') },
   { id: 'us-east-1', label: 'US East (N. Virginia)', load: () => import('../data/ec2-us-east-1.json') },
   { id: 'us-east-2', label: 'US East (Ohio)', load: () => import('../data/ec2-us-east-2.json') },

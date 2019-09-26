@@ -19,6 +19,7 @@ const regions = [
   { id: 'eu-west-1', label: 'EU (Ireland)' },
   { id: 'eu-west-2', label: 'EU (London)' },
   { id: 'eu-west-3', label: 'EU (Paris)' },
+  { id: 'me-south-1', label: 'Middle East (Bahrain)' },
   { id: 'sa-east-1', label: 'South America (Sao Paulo)' },
   { id: 'us-east-1', label: 'US East (N. Virginia)' },
   { id: 'us-east-2', label: 'US East (Ohio)' },
