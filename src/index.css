@@ -73,3 +73,8 @@ th.sort-false::after {
   display: inline-block;
   margin-right: .5em;
 }
+
+tr#empty td {
+  text-align: center;
+  font-style: italic;
+}

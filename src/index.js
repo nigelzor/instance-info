@@ -281,6 +281,13 @@ function render0(state) {
       return true;
     }
 
+    const rows = state.types.filter(typeFilter).map(makeRow);
+    if (rows.length === 0) {
+      const colspan = state.columns.length + state.priceColumns.length * state.reserveColumns.length;
+      rows.push(html`
+        <tr id='empty'><td colspan=${colspan}>no matching instance types</td></tr>
+      `);
+    }
     return html`
 <div>
   <div class="settings">
@@ -317,7 +324,7 @@ function render0(state) {
       </tr>
     </thead>
     <tbody>
-      ${state.types.filter(typeFilter).map(makeRow)}
+      ${rows}
     </tbody>
   </table>
   <p>Prices current as of ${date}</p>
