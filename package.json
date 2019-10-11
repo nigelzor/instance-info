@@ -19,10 +19,12 @@
     "parcel-plugin-static-files-copy": "^2.2.1"
   },
   "staticFiles": {
-    "staticPath": [{
-      "staticPath": "data",
-      "staticOutDir": "data"
-    }],
+    "staticPath": [
+      {
+        "staticPath": "data",
+        "staticOutDir": "data"
+      }
+    ],
     "watcherGlob": "**"
   }
 }
