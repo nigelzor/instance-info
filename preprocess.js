@@ -1,19 +1,6 @@
 #!/usr/bin/env node
 const fs = require('fs');
-const path = require('path');
 const util = require('util');
-const { regions } = require('./src/regions');
-
-const regionFiles = new Map(regions.map((r) => [r.label, `ec2-${r.id}.json`]));
-
-const offers = JSON.parse(fs.readFileSync(path.join(__dirname, './offers/v1.0/aws/AmazonEC2/current/index.json'), 'utf8'));
-const products = Object.values(offers.products);
-const instanceProducts = products.filter(p =>
-     p.productFamily === 'Compute Instance'
-  && p.attributes.operation.startsWith('RunInstances') // filter out bad data
-  && p.attributes.tenancy === 'Shared' // 'Dedicated', 'Host' aren't useful
-  && p.attributes.capacitystatus === 'Used' // ignore Capacity Reservations
-);
 
 function only(o) {
   if (o) {
@@ -23,33 +10,6 @@ function only(o) {
     }
     return v[0];
   }
-}
-
-function onDemandPrice(sku) {
-  const offer = offers.terms.OnDemand[sku];
-  if (offer) {
-    const perHr = only(only(offer).priceDimensions);
-    if (!isHourlyCost(perHr)) {
-      throw new Error('expected ' + util.inspect(only(offer)) + ' to be hourly cost');
-    }
-    return toCost(perHr);
-  }
-}
-
-function reservedPrice(sku) {
-  const offer = offers.terms.Reserved[sku];
-  return offer && Object.values(offer).map(o => {
-    const dimensions = Object.values(o.priceDimensions);
-    const hourly = dimensions.filter(isHourlyCost).map(toCost);
-    const upfront = dimensions.filter(isUpfrontCost).map(toCost);
-    if (hourly.length > 1 || upfront.length > 1 || dimensions.length !== (hourly.length + upfront.length)) {
-      throw new Error('unexpected costs in offer ' + util.inspect(o));
-    }
-    const name = Object.values(o.termAttributes).join(' - ');
-    const hours = /^(\d+)yr$/.exec(o.termAttributes.LeaseContractLength)[1] * 365.25 * 24;
-    const blended = hourly.concat(upfront.map(([unit, amount]) => [unit, amount / hours])).reduce(addCost);
-    return { name, upfront: upfront[0], hourly: hourly[0], blended };
-  });
 }
 
 function isHourlyCost(priceDimension) {
@@ -85,13 +45,56 @@ function priceName(p) {
   return [p.attributes.operatingSystem, p.attributes.preInstalledSw, p.attributes.licenseModel].filter(n => n !== 'No License required' && n !== 'NA').join(' - ');
 }
 
+function loadProducts(input) {
+  const offers = JSON.parse(fs.readFileSync(input, 'utf8'));
+  const products = Object.values(offers.products).filter(p =>
+       p.productFamily === 'Compute Instance'
+    && p.attributes.operation.startsWith('RunInstances') // filter out bad data
+    && p.attributes.tenancy === 'Shared' // 'Dedicated', 'Host' aren't useful
+    && p.attributes.capacitystatus === 'Used' // ignore Capacity Reservations
+  );
+
+  function onDemandPrice(sku) {
+    const offer = offers.terms.OnDemand[sku];
+    if (offer) {
+      const perHr = only(only(offer).priceDimensions);
+      if (!isHourlyCost(perHr)) {
+        throw new Error('expected ' + util.inspect(only(offer)) + ' to be hourly cost');
+      }
+      return toCost(perHr);
+    }
+  }
+
+  function reservedPrice(sku) {
+    const offer = offers.terms.Reserved && offers.terms.Reserved[sku];
+    return offer && Object.values(offer).map(o => {
+      const dimensions = Object.values(o.priceDimensions);
+      const hourly = dimensions.filter(isHourlyCost).map(toCost);
+      const upfront = dimensions.filter(isUpfrontCost).map(toCost);
+      if (hourly.length > 1 || upfront.length > 1 || dimensions.length !== (hourly.length + upfront.length)) {
+        throw new Error('unexpected costs in offer ' + util.inspect(o));
+      }
+      const name = Object.values(o.termAttributes).join(' - ');
+      const hours = /^(\d+)yr$/.exec(o.termAttributes.LeaseContractLength)[1] * 365.25 * 24;
+      const blended = hourly.concat(upfront.map(([unit, amount]) => [unit, amount / hours])).reduce(addCost);
+      return { name, upfront: upfront[0], hourly: hourly[0], blended };
+    });
+  }
+
+  return { products, onDemandPrice, reservedPrice, publicationDate: offers.publicationDate }
+}
+
 const ec2 = {};
 const ec2pricing = {};
 const priceNames = new Set();
 const reservationNames = new Set();
+let regionName = null;
 
-instanceProducts.forEach(p => {
+const { products, onDemandPrice, reservedPrice, publicationDate } = loadProducts(process.argv[2]);
+
+products.forEach(p => {
   const { location, instanceType } = p.attributes;
+  regionName = location;
   if (!ec2[instanceType]) {
     const info = { ...p.attributes };
     delete info.servicecode;
@@ -122,28 +125,21 @@ instanceProducts.forEach(p => {
     Name: pn,
     OnDemand: justDollars(onDemandPrice(p.sku)),
     Reserved: reservedPrices && reservedPrices.map((rp) => ({
-      name: rp.name, upfront: justDollars(rp.upfront), hourly: justDollars(rp.hourly), blended: justDollars(rp.blended)
+      name: rp.name,
+      upfront: justDollars(rp.upfront),
+      hourly: justDollars(rp.hourly),
+      blended: justDollars(rp.blended)
     })),
   });
 });
 
-function write(file, json) {
-  const content = JSON.stringify(json);
-  console.log('writing', file, content.length, 'bytes');
-  fs.writeFileSync(path.join(__dirname, 'data', file), content, 'utf8');
-}
-
-write('ec2.json', {
+console.log(JSON.stringify({
+  name: regionName,
+  date: publicationDate,
   types: ec2,
-  date: offers.publicationDate,
-});
-Object.keys(ec2pricing).forEach(r => {
-  if (!regionFiles.has(r)) {
-    throw new Error('Unrecognized region ' + r);
-  }
-  write(regionFiles.get(r), ec2pricing[r]);
-});
-write('purchase-options.json', {
-  names: [...priceNames],
-  reservations: [...reservationNames],
-});
+  options: {
+    names: [...priceNames],
+    reservations: [...reservationNames],
+  },
+  prices: Object.values(ec2pricing)[0]
+}));

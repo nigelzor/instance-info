@@ -1,8 +1,7 @@
 import html from 'nanohtml';
 import morph from 'nanomorph';
 import { regions } from './regions';
-import { types, date } from '../data/ec2.json';
-import options from '../data/purchase-options.json';
+import { types, options } from '../data/options.json';
 import classnames from 'classnames';
 import { instanceTypeCompare, reservationCompare } from "./sort";
 
@@ -257,7 +256,7 @@ function loadRegion(region) {
 
 function render0(state) {
   const region = regions.find(r => r.id === state.region) || regions[0];
-  return loadRegion(region).then(costs => {
+  return loadRegion(region).then(({ prices: costs, date }) => {
     function makeRow(t) {
       return html`
       <tr id=${t.instanceType} class=${classnames(state.highlight.has(t.instanceType) && 'highlight')} onclick=${toggleHighlight}>
@@ -307,7 +306,7 @@ function render0(state) {
     </div>
     <label>Prices:</label> 
     <div>
-      <div><label>per <select onchange=${setPriceScale}>${Object.keys(priceScales).map(r => html`<option selected=${r === state.priceScale} value=${r}>${r}</option>`)}</select></label></div>
+      <div><label>per <select onchange=${setPriceScale}>${Object.keys(priceScales).map(r => html`<option selected=${r === state.priceScale} value=${r}>${r}</option>`)}</select> (in USD)</label></div>
       <div>${renderPriceOptions(state)}</div>
       <div>${reserveOptions.filter((ro) => ro.name === 'On Demand').map((ro) => renderReserveOption(state, ro))}</div>
       <div>${reserveOptions.filter((ro) => /standard/.test(ro.name)).map((ro) => renderReserveOption(state, ro))}</div>
