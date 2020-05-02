@@ -1,6 +1,6 @@
 const sizes = 'nano micro small medium large xlarge'.split(' ');
 
-exports.instanceTypeCompare = function instanceTypeCompare(a, b) {
+export function instanceTypeCompare(a, b) {
   if (a === b) return 0;
   const [af, as] = a.split('.', 2);
   const [bf, bs] = b.split('.', 2);
@@ -16,9 +16,9 @@ exports.instanceTypeCompare = function instanceTypeCompare(a, b) {
   if (as.length < bs.length) return -1;
   if (as > bs) return 1;
   if (as < bs) return -1;
-};
+}
 
-exports.reservationCompare = function reservationCompare(a, b) {
+export function reservationCompare(a, b) {
   if (a === b) return 0;
   const [ay, ac, au] = a.split(' - ', 3);
   const [by, bc, bu] = b.split(' - ', 3);
@@ -28,4 +28,4 @@ exports.reservationCompare = function reservationCompare(a, b) {
   if (ay < by) return -1;
   if (au > bu) return 1;
   if (au < bu) return -1;
-};
+}

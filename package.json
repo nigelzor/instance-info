@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "author": "Neil Gentleman <ngentleman@gmail.com>",
   "license": "MIT",
+  "type": "module",
   "scripts": {
-    "test": "jest",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
     "build": "make && parcel build --experimental-scope-hoisting src/index.html",
     "start": "make && parcel serve --no-autoinstall src/index.html"
   },
@@ -15,7 +16,8 @@
     "nanomorph": "^5.1.3"
   },
   "devDependencies": {
-    "jest": "^24.9.0",
+    "jest": "^25.5.3",
+    "jest-environment-jsdom-sixteen": "^1.0.3",
     "parcel-bundler": "^1.12.3",
     "parcel-plugin-static-files-copy": "^2.2.1"
   },
@@ -27,5 +29,8 @@
       }
     ],
     "watcherGlob": "**"
+  },
+  "jest": {
+    "testEnvironment": "jsdom-sixteen"
   }
 }

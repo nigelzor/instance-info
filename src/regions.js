@@ -1,4 +1,4 @@
-exports.regions = [
+export const regions = [
   { id: 'us-gov-east-1', label: 'AWS GovCloud (US-East)' },
   { id: 'us-gov-west-1', label: 'AWS GovCloud (US)' },
   { id: 'ap-east-1', label: 'Asia Pacific (Hong Kong)' },

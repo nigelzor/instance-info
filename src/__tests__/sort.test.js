@@ -1,4 +1,4 @@
-const { instanceTypeCompare } = require('../sort');
+import { instanceTypeCompare } from '../sort';
 
 test('instance sort', () => {
   const input = ['z1d.xlarge',

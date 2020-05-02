@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-const fs = require('fs');
-const util = require('util');
+import fs from 'fs';
+import util from 'util';
 
 function only(o) {
   if (o) {
