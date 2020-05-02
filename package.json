@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "classnames": "^2.2.6",
+    "memoize-one": "^5.1.1",
     "nanohtml": "^1.2.4",
     "nanomorph": "^5.1.3"
   },

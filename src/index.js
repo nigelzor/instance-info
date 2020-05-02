@@ -3,6 +3,7 @@ import morph from 'nanomorph';
 import { regions } from './regions';
 import { types, options } from '../data/options.json';
 import classnames from 'classnames';
+import memoize from 'memoize-one';
 import { instanceTypeCompare, reservationCompare } from "./sort";
 
 const region = 'us-east-1';
@@ -81,10 +82,8 @@ const state = window.state || (window.state = {
     storage: 0,
     unavailable: true,
   },
-  sort: [columnOptions[0], true]
+  sort: [columnOptions[0], true, columnOptions[0].sort],
 });
-
-state.types.sort(columnOptions[0].sort);
 
 let pending = false;
 function rerender() {
@@ -201,38 +200,37 @@ function renderColumnHeaders(state) {
     const active = state.sort[0] === c;
     const direction = active && state.sort[1];
     const sort = () => {
-      state.sort = [c, !direction];
-      state.types.sort(direction ? reverse(c.sort) : c.sort);
+      state.sort = [c, !direction, direction ? reverse(c.sort) : c.sort];
       rerender();
     };
     return html`<th onclick=${sort} class=${classnames('sortable', active && `sort-${direction}`)}>${c.name}</th>`;
   })
 }
 
-function renderPriceHeaders(state, costs) {
+const priceCompare = (pc, rc, direction) => (costs) => (a, b) => {
+  const tca = costs[a.instanceType];
+  const tcb = costs[b.instanceType];
+  const tpca = tca && tca.find((c) => c.Name === pc);
+  const tpcb = tcb && tcb.find((c) => c.Name === pc);
+  const av = rc.value(tpca);
+  const bv = rc.value(tpcb);
+
+  // we always want NaN at the end, regardless of direction
+  if (isFinite(av - bv)) {
+    return direction ? bv - av : av - bv;
+  }
+  return isFinite(av) ? -1 : 1;
+};
+
+function renderPriceHeaders(state) {
   const cols = [];
   for (const pc of state.priceColumns) {
     for (const rc of state.reserveColumns) {
       const name = `${pc} ${rc.name}`;
       const active = state.sort[0] === name;
       const direction = active && state.sort[1];
-      const priceCompare = (a, b) => {
-        const tca = costs[a.instanceType];
-        const tcb = costs[b.instanceType];
-        const tpca = tca && tca.find((c) => c.Name === pc);
-        const tpcb = tcb && tcb.find((c) => c.Name === pc);
-        const av = rc.value(tpca);
-        const bv = rc.value(tpcb);
-
-        // we always want NaN at the end, regardless of direction
-        if (isFinite(av - bv)) {
-          return direction ? bv - av : av - bv;
-        }
-        return isFinite(av) ? -1 : 1;
-      };
       const sort = () => {
-        state.sort = [name, !direction];
-        state.types.sort(priceCompare);
+        state.sort = [name, !direction, null, priceCompare(pc, rc, direction)];
         rerender();
       };
       cols.push(html`<th onclick=${sort} class=${classnames('sortable', active && `sort-${direction}`)}>${name}</th>`);
@@ -249,10 +247,15 @@ function renderReserveOption(state, r) {
   return html`<label><input type="checkbox" checked=${state.reserveColumns.find((rc) => rc.name === r.name) != null} onchange=${toggleReserveColumn} />${r.name}</label>`;
 }
 
-function loadRegion(region) {
+const loadRegion = memoize((region) => {
   const filename = `data/ec2-${region.id}.json`;
   return fetch(filename).then((res) => res.json());
-}
+});
+
+const sortTypes = memoize((types, sort, costs) => {
+  const sorter = sort[3] ? sort[3](costs) : sort[2];
+  return types.sort(sorter);
+});
 
 function render0(state) {
   const region = regions.find(r => r.id === state.region) || regions[0];
@@ -285,7 +288,7 @@ function render0(state) {
       return true;
     }
 
-    const rows = state.types.filter(typeFilter).map(makeRow);
+    const rows = sortTypes(state.types, state.sort, costs).filter(typeFilter).map(makeRow);
     if (rows.length === 0) {
       const colspan = state.columns.length + state.priceColumns.length * state.reserveColumns.length;
       rows.push(html`
@@ -324,7 +327,7 @@ function render0(state) {
     <thead>
       <tr>
         ${renderColumnHeaders(state)}
-        ${renderPriceHeaders(state, costs)}
+        ${renderPriceHeaders(state)}
       </tr>
     </thead>
     <tbody>
