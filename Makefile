@@ -11,6 +11,11 @@ all: data/options.json $(ALL_DATA)
 offers/%:
 	wget --compression=auto -N -r -nH https://pricing.us-east-1.amazonaws.com/offers/$*
 
+.PHONY: all-offers
+all-offers:
+	wget --compression=auto -N -r -nH https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/region_index.json
+	jq -r '.regions[]|("https://pricing.us-east-1.amazonaws.com" + .currentVersionUrl)' offers/v1.0/aws/AmazonEC2/current/region_index.json | xargs wget --compression=auto -N -r -nH
+
 Makefile.regions: offers/v1.0/aws/AmazonEC2/current/region_index.json
 	jq -r '.regions[].regionCode' $< | xargs | awk '{ print "REGIONS = " $$0 }' > $@
 
