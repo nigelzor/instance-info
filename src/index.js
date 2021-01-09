@@ -299,9 +299,9 @@ function render0(state) {
     return html`
 <div>
   <div class="settings">
-    <label>Region:</label>
+    <label for="select-region">Region:</label>
     <div>
-      <label><select onchange=${setRegion}>${regions.map(r => html`<option selected=${r.id === state.region} value=${r.id}>${r.label}</option>`)}</select></label>
+      <label><select id="select-region" onchange=${setRegion}>${regions.map(r => html`<option selected=${r.id === state.region} value=${r.id}>${r.label}</option>`)}</select></label>
       <label>Hide Unavailable Types: <input type="checkbox" checked=${state.filter.unavailable} onchange=${toggleFilterUnavailable} /></label>
     </div>
     <label>Columns:</label>
