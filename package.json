@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
-    "build": "make && parcel build --experimental-scope-hoisting src/index.html",
-    "start": "make && parcel serve --no-autoinstall src/index.html"
+    "build": "make && snowpack build",
+    "start": "make && snowpack dev"
   },
   "dependencies": {
     "classnames": "^2.2.6",
@@ -17,16 +17,6 @@
   },
   "devDependencies": {
     "jest": "^26.6.3",
-    "parcel-bundler": "^1.12.3",
-    "parcel-plugin-static-files-copy": "^2.2.1"
-  },
-  "staticFiles": {
-    "staticPath": [
-      {
-        "staticPath": "data",
-        "staticOutDir": "data"
-      }
-    ],
-    "watcherGlob": "**"
+    "snowpack": "^2.18.5"
   }
 }

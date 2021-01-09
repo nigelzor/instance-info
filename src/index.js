@@ -300,7 +300,7 @@ function render0(state) {
 <div>
   <div class="settings">
     <label>Region:</label>
-    <div> 
+    <div>
       <label><select onchange=${setRegion}>${regions.map(r => html`<option selected=${r.id === state.region} value=${r.id}>${r.label}</option>`)}</select></label>
       <label>Hide Unavailable Types: <input type="checkbox" checked=${state.filter.unavailable} onchange=${toggleFilterUnavailable} /></label>
     </div>
@@ -308,7 +308,7 @@ function render0(state) {
     <div>
       ${columnOptions.map((c) => html`<label><input type="checkbox" checked=${state.columns.find((sc) => sc.name === c.name) != null} onchange=${toggleColumn} />${c.name}</label>`)}
     </div>
-    <label>Prices:</label> 
+    <label>Prices:</label>
     <div>
       <div><label>per <select onchange=${setPriceScale}>${Object.keys(priceScales).map(r => html`<option selected=${r === state.priceScale} value=${r}>${r}</option>`)}</select> (in USD)</label></div>
       <div>${renderPriceOptions(state)}</div>

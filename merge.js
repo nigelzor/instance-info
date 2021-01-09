@@ -8,7 +8,7 @@ const dates = new Set();
 const inputs = process.argv.slice(2);
 
 for (const f of inputs) {
-  const i = JSON.parse(fs.readFileSync(f));
+  const i = JSON.parse(fs.readFileSync(f, 'utf8'));
   Object.assign(types, i.types);
   for (const name of i.options.names) {
     priceNames.add(name);
