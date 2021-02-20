@@ -4,6 +4,13 @@
 /.cache
 /node_modules
 /.idea
-/.yarn
 /work
 /Makefile.regions
+
+# yarn v2, without zero-install
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
