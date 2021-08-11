@@ -12,12 +12,16 @@ function only(o) {
   }
 }
 
+function nullOrEmpty(a) {
+  return a == null || a.length === 0;
+}
+
 function isHourlyCost(priceDimension) {
-  return priceDimension.beginRange === '0' && priceDimension.endRange === 'Inf' && (priceDimension.unit === 'Hours' || priceDimension.unit === 'Hrs') && priceDimension.appliesTo.length === 0;
+  return priceDimension.beginRange === '0' && priceDimension.endRange === 'Inf' && (priceDimension.unit === 'Hours' || priceDimension.unit === 'Hrs') && nullOrEmpty(priceDimension.appliesTo);
 }
 
 function isUpfrontCost(priceDimension) {
-  return priceDimension.unit === 'Quantity' && priceDimension.description === 'Upfront Fee' && priceDimension.appliesTo.length === 0;
+  return priceDimension.unit === 'Quantity' && priceDimension.description === 'Upfront Fee' && nullOrEmpty(priceDimension.appliesTo);
 }
 
 function toCost(priceDimension) {
