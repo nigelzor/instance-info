@@ -1,7 +1,7 @@
 import html from 'nanohtml';
 import morph from 'nanomorph';
 import { regions } from './regions';
-import optionData from '../data/options.json';
+import optionData from '../public/data/options.json';
 import classnames from 'classnames';
 import memoize from 'memoize-one';
 import { instanceTypeCompare, reservationCompare } from "./sort";

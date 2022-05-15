@@ -3,10 +3,10 @@
 
 include Makefile.regions
 
-ALL_DATA = $(addsuffix .json,$(addprefix data/ec2-,$(REGIONS)))
+ALL_DATA = $(addsuffix .json,$(addprefix public/data/ec2-,$(REGIONS)))
 
 .PHONY: all
-all: data/options.json $(ALL_DATA)
+all: public/data/options.json $(ALL_DATA)
 
 offers/%:
 	wget --compression=auto -N -r -nH https://pricing.us-east-1.amazonaws.com/offers/$*
@@ -29,11 +29,11 @@ work/%.ec2: offers/v1.0/aws/AmazonEC2/current/region_index.json | work
 work/%.json: preprocess.js work/%.ec2
 	node $^ > $@
 
-data:
-	mkdir -p data
+public/data:
+	mkdir -p public/data
 
-data/ec2-%.json: work/%.json | data
+public/data/ec2-%.json: work/%.json | public/data
 	jq -c 'del(.types,.options)' $< > $@
 
-data/options.json: merge.js $(addsuffix .json,$(addprefix work/,$(REGIONS)))
+public/data/options.json: merge.js $(addsuffix .json,$(addprefix work/,$(REGIONS)))
 	node $^ > $@
