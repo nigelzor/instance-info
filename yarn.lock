@@ -2611,9 +2611,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"instance-info@workspace:.":
+"instance-info-preprocess@workspace:packages/preprocess":
   version: 0.0.0-use.local
-  resolution: "instance-info@workspace:."
+  resolution: "instance-info-preprocess@workspace:packages/preprocess"
+  languageName: unknown
+  linkType: soft
+
+"instance-info-webapp@workspace:packages/webapp":
+  version: 0.0.0-use.local
+  resolution: "instance-info-webapp@workspace:packages/webapp"
   dependencies:
     classnames: ^2.2.6
     jest: ^26.6.3
@@ -2621,6 +2627,12 @@ __metadata:
     nanohtml: ^1.2.4
     nanomorph: ^5.1.3
     vite: ^2.9.9
+  languageName: unknown
+  linkType: soft
+
+"instance-info@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "instance-info@workspace:."
   languageName: unknown
   linkType: soft
 

@@ -1,10 +1,12 @@
-/offers
-/public/data/
-/dist
-/.cache
-/node_modules
-/.idea
-/work
+node_modules/
+packages/webapp/public/data/
+packages/*/dist/
+
+.cache/
+.idea/
+
+/offers/
+/work/
 /Makefile.regions
 
 # yarn v2, without zero-install
