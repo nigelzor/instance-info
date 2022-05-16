@@ -92,7 +92,7 @@ const ec2 = {};
 const ec2pricing = {};
 const priceNames = new Set();
 const reservationNames = new Set();
-let regionName = null;
+let regionName;
 
 const { products, onDemandPrice, reservedPrice, publicationDate } = loadProducts(process.argv[2]);
 
@@ -113,11 +113,8 @@ products.forEach(p => {
     delete info.operation;
     ec2[instanceType] = { instanceType, info };
   }
-  if (!ec2pricing[location]) {
-    ec2pricing[location] = {};
-  }
-  if (!ec2pricing[location][instanceType]) {
-    ec2pricing[location][instanceType] = [];
+  if (!ec2pricing[instanceType]) {
+    ec2pricing[instanceType] = [];
   }
   const pn = priceName(p);
   priceNames.add(pn);
@@ -125,7 +122,7 @@ products.forEach(p => {
   if (reservedPrices) {
     reservedPrices.forEach(rp => reservationNames.add(rp.name));
   }
-  ec2pricing[location][instanceType].push({
+  ec2pricing[instanceType].push({
     Name: pn,
     OnDemand: justDollars(onDemandPrice(p.sku)),
     Reserved: reservedPrices && reservedPrices.map((rp) => ({
@@ -145,5 +142,5 @@ console.log(JSON.stringify({
     names: [...priceNames],
     reservations: [...reservationNames],
   },
-  prices: Object.values(ec2pricing)[0]
+  prices: ec2pricing
 }));
