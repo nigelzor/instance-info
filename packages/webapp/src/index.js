@@ -1,10 +1,10 @@
-import html from 'nanohtml';
-import morph from 'nanomorph';
-import { regions } from './regions';
-import optionData from '../public/data/options.json';
 import classnames from 'classnames';
 import memoize from 'memoize-one';
-import { instanceTypeCompare, reservationCompare } from "./sort";
+import html from 'nanohtml';
+import morph from 'nanomorph';
+import optionData from '../public/data/options.json';
+import { regions } from './regions';
+import { instanceTypeCompare, reservationCompare } from './sort';
 
 const region = 'us-east-1';
 const { types, options } = optionData;
@@ -27,12 +27,17 @@ function sortBy(name) {
     if (a[name] > b[name] || (Number.isNaN(a[name]) && !Number.isNaN(b[name]))) return 1;
     if (a[name] < b[name] || (!Number.isNaN(a[name]) && Number.isNaN(b[name]))) return -1;
     return 0;
-  }
+  };
 }
 
 const columnOptions = [
   { name: 'Name', value: (t) => t.instanceType, sort: (a, b) => instanceTypeCompare(a.instanceType, b.instanceType) },
-  { name: 'Memory', value: (t) => t.info.memory, render: (t) => html`<td class="right">${t.info.memory}</td>`, sort: sortBy('memory') },
+  {
+    name: 'Memory',
+    value: (t) => t.info.memory,
+    render: (t) => html`<td class="right">${t.info.memory}</td>`,
+    sort: sortBy('memory'),
+  },
   { name: 'ECU', value: (t) => t.info.ecu, sort: sortBy('ecu') },
   { name: 'vCPUs', value: (t) => t.info.vcpu, sort: sortBy('vcpu') },
   { name: 'ECU/vCPU', value: (t) => round(t.info.ecu / t.info.vcpu, 2) },
@@ -48,10 +53,13 @@ const priceOptions = options.names.filter((n) => n !== 'Windows - Bring your own
 const reserveOptions = [
   { name: 'On Demand', value: (c) => c && c.OnDemand },
   ...options.reservations.sort(reservationCompare).map((name) => (
-    { name, value: (c) => {
-      const rate = c && c.Reserved && c.Reserved.find((r) => r.name === name);
-      return rate && rate.blended;
-    } }
+    {
+      name,
+      value: (c) => {
+        const rate = c && c.Reserved && c.Reserved.find((r) => r.name === name);
+        return rate && rate.blended;
+      },
+    }
   )),
 ];
 
@@ -65,12 +73,14 @@ function parseStorage(s) {
 
 const state = window.state || (window.state = {
   region,
-  types: Object.values(types).map((t) => Object.assign({}, t, {
-    memory: parseFloat(t.info.memory.replace(/,/g, '')),
-    ecu: parseFloat(t.info.ecu),
-    vcpu: parseFloat(t.info.vcpu),
-    storage: parseStorage(t.info.storage.replace(/,/g, '')),
-  })),
+  types: Object.values(types).map((t) =>
+    Object.assign({}, t, {
+      memory: parseFloat(t.info.memory.replace(/,/g, '')),
+      ecu: parseFloat(t.info.ecu),
+      vcpu: parseFloat(t.info.vcpu),
+      storage: parseStorage(t.info.storage.replace(/,/g, '')),
+    })
+  ),
   highlight: new Set(),
   priceScale: 'hour',
   columns: columnOptions.filter((c, i) => i < 2 || i === 3 || i > 6),
@@ -163,7 +173,7 @@ function updateFilterStorage() {
 }
 
 function renderColumns(state, t) {
-  return state.columns.map((c) => c.render ? c.render(t) : html`<td>${c.value(t)}</td>`)
+  return state.columns.map((c) => c.render ? c.render(t) : html`<td>${c.value(t)}</td>`);
 }
 
 function renderPriceColumns(state, t, costs) {
@@ -172,7 +182,7 @@ function renderPriceColumns(state, t, costs) {
   const formatCost = (c) => {
     if (c != null) {
       const d = round(c * scale, 4);
-      return `$ ${d}`
+      return `$ ${d}`;
     }
   };
   const cols = [];
@@ -205,7 +215,7 @@ function renderColumnHeaders(state) {
       rerender();
     };
     return html`<th onclick=${sort} class=${classnames('sortable', active && `sort-${direction}`)}>${c.name}</th>`;
-  })
+  });
 }
 
 const priceCompare = (pc, rc, direction) => (costs) => (a, b) => {
@@ -241,11 +251,17 @@ function renderPriceHeaders(state) {
 }
 
 function renderPriceOptions(state) {
-  return priceOptions.map((c) => html`<label><input type="checkbox" checked=${state.priceColumns.includes(c)} onchange=${togglePriceColumn} />${c}</label>`);
+  return priceOptions.map((c) =>
+    html`<label><input type="checkbox" checked=${
+      state.priceColumns.includes(c)
+    } onchange=${togglePriceColumn} />${c}</label>`
+  );
 }
 
 function renderReserveOption(state, r) {
-  return html`<label><input type="checkbox" checked=${state.reserveColumns.find((rc) => rc.name === r.name) != null} onchange=${toggleReserveColumn} />${r.name}</label>`;
+  return html`<label><input type="checkbox" checked=${
+    state.reserveColumns.find((rc) => rc.name === r.name) != null
+  } onchange=${toggleReserveColumn} />${r.name}</label>`;
 }
 
 const loadRegion = memoize((region) => {
@@ -263,7 +279,9 @@ function render0(state) {
   return loadRegion(region).then(({ prices: costs, date }) => {
     function makeRow(t) {
       return html`
-      <tr id=${t.instanceType} class=${classnames(state.highlight.has(t.instanceType) && 'highlight')} onclick=${toggleHighlight}>
+      <tr id=${t.instanceType} class=${
+        classnames(state.highlight.has(t.instanceType) && 'highlight')
+      } onclick=${toggleHighlight}>
         ${renderColumns(state, t)}
         ${renderPriceColumns(state, t, costs)}
       </tr>
@@ -301,20 +319,32 @@ function render0(state) {
   <div class="settings">
     <label for="select-region">Region:</label>
     <div>
-      <label><select id="select-region" onchange=${setRegion}>${regions.map(r => html`<option selected=${r.id === state.region} value=${r.id}>${r.label}</option>`)}</select></label>
+      <label><select id="select-region" onchange=${setRegion}>${
+      regions.map(r => html`<option selected=${r.id === state.region} value=${r.id}>${r.label}</option>`)
+    }</select></label>
       <label>Hide Unavailable Types: <input type="checkbox" checked=${state.filter.unavailable} onchange=${toggleFilterUnavailable} /></label>
     </div>
     <label>Columns:</label>
     <div>
-      ${columnOptions.map((c) => html`<label><input type="checkbox" checked=${state.columns.find((sc) => sc.name === c.name) != null} onchange=${toggleColumn} />${c.name}</label>`)}
+      ${
+      columnOptions.map((c) =>
+        html`<label><input type="checkbox" checked=${
+          state.columns.find((sc) => sc.name === c.name) != null
+        } onchange=${toggleColumn} />${c.name}</label>`
+      )
+    }
     </div>
     <label>Prices:</label>
     <div>
-      <div><label>per <select onchange=${setPriceScale}>${Object.keys(priceScales).map(r => html`<option selected=${r === state.priceScale} value=${r}>${r}</option>`)}</select> (in USD)</label></div>
+      <div><label>per <select onchange=${setPriceScale}>${
+      Object.keys(priceScales).map(r => html`<option selected=${r === state.priceScale} value=${r}>${r}</option>`)
+    }</select> (in USD)</label></div>
       <div>${renderPriceOptions(state)}</div>
       <div>${reserveOptions.filter((ro) => ro.name === 'On Demand').map((ro) => renderReserveOption(state, ro))}</div>
       <div>${reserveOptions.filter((ro) => /standard/.test(ro.name)).map((ro) => renderReserveOption(state, ro))}</div>
-      <div>${reserveOptions.filter((ro) => /convertible/.test(ro.name)).map((ro) => renderReserveOption(state, ro))}</div>
+      <div>${
+      reserveOptions.filter((ro) => /convertible/.test(ro.name)).map((ro) => renderReserveOption(state, ro))
+    }</div>
     </div>
     <label>Filter:</label>
     <div>
@@ -348,7 +378,7 @@ function render(state) {
   const current = ++batch;
   Promise.resolve(render0(state)).then((el) => {
     if (current === batch) {
-      morph(root, el)
+      morph(root, el);
     }
   });
 }

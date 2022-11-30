@@ -17,11 +17,13 @@ function nullOrEmpty(a) {
 }
 
 function isHourlyCost(priceDimension) {
-  return priceDimension.beginRange === '0' && priceDimension.endRange === 'Inf' && (priceDimension.unit === 'Hours' || priceDimension.unit === 'Hrs') && nullOrEmpty(priceDimension.appliesTo);
+  return priceDimension.beginRange === '0' && priceDimension.endRange === 'Inf'
+    && (priceDimension.unit === 'Hours' || priceDimension.unit === 'Hrs') && nullOrEmpty(priceDimension.appliesTo);
 }
 
 function isUpfrontCost(priceDimension) {
-  return priceDimension.unit === 'Quantity' && priceDimension.description === 'Upfront Fee' && nullOrEmpty(priceDimension.appliesTo);
+  return priceDimension.unit === 'Quantity' && priceDimension.description === 'Upfront Fee'
+    && nullOrEmpty(priceDimension.appliesTo);
 }
 
 function toCost(priceDimension) {
@@ -46,13 +48,15 @@ function justDollars(a) {
 }
 
 function priceName(p) {
-  return [p.attributes.operatingSystem, p.attributes.preInstalledSw, p.attributes.licenseModel].filter(n => n !== 'No License required' && n !== 'NA').join(' - ');
+  return [p.attributes.operatingSystem, p.attributes.preInstalledSw, p.attributes.licenseModel].filter(n =>
+    n !== 'No License required' && n !== 'NA'
+  ).join(' - ');
 }
 
 function loadProducts(input) {
   const offers = JSON.parse(fs.readFileSync(input, 'utf8'));
   const products = Object.values(offers.products).filter(p =>
-       p.productFamily === 'Compute Instance'
+    p.productFamily === 'Compute Instance'
     && p.attributes.operation.startsWith('RunInstances') // filter out bad data
     && p.attributes.tenancy === 'Shared' // 'Dedicated', 'Host' aren't useful
     && p.attributes.capacitystatus === 'Used' // ignore Capacity Reservations
@@ -85,7 +89,7 @@ function loadProducts(input) {
     });
   }
 
-  return { products, onDemandPrice, reservedPrice, publicationDate: offers.publicationDate }
+  return { products, onDemandPrice, reservedPrice, publicationDate: offers.publicationDate };
 }
 
 const ec2 = {};
@@ -129,7 +133,7 @@ products.forEach(p => {
       name: rp.name,
       upfront: justDollars(rp.upfront),
       hourly: justDollars(rp.hourly),
-      blended: justDollars(rp.blended)
+      blended: justDollars(rp.blended),
     })),
   });
 });
@@ -142,5 +146,5 @@ console.log(JSON.stringify({
     names: [...priceNames],
     reservations: [...reservationNames],
   },
-  prices: ec2pricing
+  prices: ec2pricing,
 }));

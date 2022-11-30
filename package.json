@@ -6,10 +6,14 @@
   "type": "module",
   "scripts": {
     "build": "make && yarn workspace instance-info-webapp build",
-    "start": "make && yarn workspace instance-info-webapp start"
+    "start": "make && yarn workspace instance-info-webapp start",
+    "lint": "dprint fmt"
   },
   "workspaces": [
     "packages/*"
   ],
-  "packageManager": "yarn@3.2.1"
+  "packageManager": "yarn@3.2.1",
+  "devDependencies": {
+    "dprint": "^0.33.0"
+  }
 }

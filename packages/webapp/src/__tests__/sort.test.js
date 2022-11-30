@@ -1,7 +1,8 @@
 import { instanceTypeCompare } from '../sort';
 
 test('instance sort', () => {
-  const input = ['z1d.xlarge',
+  const input = [
+    'z1d.xlarge',
     'z1d.large',
     'z1d.2xlarge',
     'z1d.12xlarge',
@@ -14,7 +15,7 @@ test('instance sort', () => {
     't2.micro',
     't2.nano',
     'z1d.6xlarge',
-    't2.2xlarge'
+    't2.2xlarge',
   ];
   input.sort(instanceTypeCompare);
   expect(input).toEqual([
@@ -32,5 +33,5 @@ test('instance sort', () => {
     'z1d.3xlarge',
     'z1d.6xlarge',
     'z1d.12xlarge',
-  ])
+  ]);
 });
