@@ -1,5 +1,9 @@
 {
   "name": "instance-info-preprocess",
   "version": "1.0.0",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "jsdom": "^19.0.0",
+    "make-fetch-happen": "^10.1.3"
+  }
 }

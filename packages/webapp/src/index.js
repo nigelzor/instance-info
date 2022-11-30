@@ -46,7 +46,7 @@ const columnOptions = [
 const priceOptions = options.names.filter((n) => n !== 'Windows - Bring your own license').sort();
 
 const reserveOptions = [
-  { name: 'On Demand', value: (c) => c && c.OnDemand && c.OnDemand },
+  { name: 'On Demand', value: (c) => c && c.OnDemand },
   ...options.reservations.sort(reservationCompare).map((name) => (
     { name, value: (c) => {
       const rate = c && c.Reserved && c.Reserved.find((r) => r.name === name);
