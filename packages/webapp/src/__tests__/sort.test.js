@@ -1,4 +1,4 @@
-import { instanceTypeCompare } from '../sort';
+import { instanceTypeCompare } from '../sort.js';
 
 test('instance sort', () => {
   const input = [

@@ -12,7 +12,7 @@
   "workspaces": [
     "packages/*"
   ],
-  "packageManager": "yarn@3.2.1",
+  "packageManager": "yarn@3.3.0",
   "devDependencies": {
     "dprint": "^0.33.0"
   }
