@@ -10,6 +10,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const cachePath = path.join(__dirname, '../../../offers');
+const dataPath = path.join(__dirname, '../../webapp/public/data');
+const workPath = path.join(__dirname, '../../../work');
 
 const fetch = makeFetch.defaults({ cachePath });
 
@@ -47,10 +49,11 @@ async function main() {
   }
 
   console.log(regions);
+  await fs.promises.writeFile(path.join(dataPath, 'regions.json'), JSON.stringify(regions));
 
   await Promise.all(regions.map(async (region) => {
     const url = new URL(region.currentVersionUrl, HOST);
-    const output = path.join(cachePath, '..', region.currentVersionUrl);
+    const output = path.join(workPath, `${region.regionCode}.ec2`);
     console.log(`fetching ${url} to ${output}`);
     const response = await fetchOk(url);
     await fs.promises.mkdir(path.dirname(output), { recursive: true });
