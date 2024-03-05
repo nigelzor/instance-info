@@ -2,8 +2,8 @@ const sizes = 'nano micro small medium large xlarge'.split(' ');
 
 export function instanceTypeCompare(a, b) {
   if (a === b) return 0;
-  const [af, as] = a.split('.', 2);
-  const [bf, bs] = b.split('.', 2);
+  const [af, as] = a.split(/[/. ]/, 2);
+  const [bf, bs] = b.split(/[/. ]/, 2);
   if (af > bf) return 1;
   if (af < bf) return -1;
   let asi = sizes.indexOf(as);

@@ -92,6 +92,7 @@ const state = window.state || (window.state = {
     vcpu: 0,
     storage: 0,
     unavailable: true,
+    fargate: false,
   },
   sort: [columnOptions[0], true, columnOptions[0].sort],
 });
@@ -149,6 +150,11 @@ function toggleReserveColumn() {
 
 function toggleFilterUnavailable() {
   state.filter.unavailable = !state.filter.unavailable;
+  rerender();
+}
+
+function toggleFilterFargate() {
+  state.filter.fargate = !state.filter.fargate;
   rerender();
 }
 
@@ -292,6 +298,9 @@ function render0(state) {
       if (state.filter.unavailable && !costs[t.instanceType]) {
         return false;
       }
+      if (!state.filter.fargate && t.instanceType.startsWith('Fargate ')) {
+        return false;
+      }
       if (state.filter.name && !t.instanceType.includes(state.filter.name)) {
         return false;
       }
@@ -323,6 +332,7 @@ function render0(state) {
       regions.map(r => html`<option selected=${r.id === state.region} value=${r.id}>${r.label}</option>`)
     }</select></label>
       <label>Hide Unavailable Types: <input type="checkbox" checked=${state.filter.unavailable} onchange=${toggleFilterUnavailable} /></label>
+      <label>Include Fargate: <input type="checkbox" checked=${state.filter.fargate} onchange=${toggleFilterFargate} /></label>
     </div>
     <label>Columns:</label>
     <div>

@@ -1,17 +1,13 @@
 import { strict as assert } from 'assert';
-import fs from 'fs';
 import { JSDOM } from 'jsdom';
 import makeFetch from 'make-fetch-happen';
 import path from 'path';
-import { pipeline } from 'stream/promises';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const cachePath = path.join(__dirname, '../../../offers');
-const dataPath = path.join(__dirname, '../../webapp/public/data');
-const workPath = path.join(__dirname, '../../../work');
 
 const fetch = makeFetch.defaults({ cachePath });
 
@@ -25,7 +21,7 @@ async function fetchOk(url) {
   return response;
 }
 
-async function main() {
+async function fetchRegions() {
   const regions = [];
 
   const index = await (await fetchOk(new URL('/offers/v1.0/aws/AmazonEC2/current/region_index.json', HOST))).json();
@@ -44,23 +40,12 @@ async function main() {
     const label = cells[1].textContent;
     regions.push({
       label,
-      ...index.regions[regionCode],
+      regionCode,
+      // ...index.regions[regionCode],
     });
   }
-
-  console.log(regions);
-  await fs.promises.writeFile(path.join(dataPath, 'regions.json'), JSON.stringify(regions));
-
-  await Promise.all(regions.map(async (region) => {
-    const url = new URL(region.currentVersionUrl, HOST);
-    const output = path.join(workPath, `${region.regionCode}.ec2`);
-    console.log(`fetching ${url} to ${output}`);
-    const response = await fetchOk(url);
-    await fs.promises.mkdir(path.dirname(output), { recursive: true });
-    await pipeline(response.body, fs.createWriteStream(output));
-    console.log('fetched ' + region.currentVersionUrl);
-  }));
-  console.log('all fetched');
+  return regions;
 }
 
-main().catch(e => console.error(e));
+const regions = await fetchRegions();
+console.log(JSON.stringify(regions));
